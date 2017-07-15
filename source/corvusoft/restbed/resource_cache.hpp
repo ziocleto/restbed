@@ -2,8 +2,8 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _CORVUSOFT_RESTBED_SESSION_MANAGER_H
-#define _CORVUSOFT_RESTBED_SESSION_MANAGER_H 1
+#ifndef _CORVUSOFT_RESTBED_RESOURCE_CACHE_H
+#define _CORVUSOFT_RESTBED_RESOURCE_CACHE_H 1
 
 //System Includes
 #include <memory>
@@ -25,6 +25,7 @@ namespace corvusoft
     //Forward Declarations
     namespace core
     {
+        class Logger;
         class RunLoop;
         class Settings;
     }
@@ -32,9 +33,8 @@ namespace corvusoft
     namespace restbed
     {
         //Forward Declarations
-        class Session;
         
-        class SessionManager
+        class ResourceCache
         {
             public:
                 //Friends
@@ -52,16 +52,12 @@ namespace corvusoft
                 virtual void load( const std::shared_ptr< Session > session,
                                    const std::function< void ( const std::shared_ptr< Session > ) >& success,
                                    const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) >& failure ) noexcept = 0;
-                                   
-                virtual void save( const std::shared_ptr< Session > session,
-                                   const std::function< void ( const std::shared_ptr< Session > ) >& success,
-                                   const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) >& failure ) noexcept = 0;
                 //Getters
                 
                 //Setters
                 virtual void set_error_handler( const std::function< void ( const std::error_code ) >& value ) = 0;
                 
-                virtual void set_log_handler( const std::function< void ( const int, const std::string ) >& value  ) = 0;
+                virtual void set_log_handler( const std::function< void ( const int, const std::string ) >& value ) = 0;
                 
                 //Operators
                 
@@ -73,12 +69,12 @@ namespace corvusoft
                 //Definitions
                 
                 //Constructors
-                SessionManager( void )
+                ResourceCache( void )
                 {
                     return;
                 };
                 
-                virtual ~SessionManager( void );
+                virtual ~ResourceCache( void );
                 
                 //Functionality
                 
@@ -96,7 +92,7 @@ namespace corvusoft
                 //Definitions
                 
                 //Constructors
-                SessionManager( const SessionManager& original ) = delete;
+                ResourceCache( const ResourceCache& original ) = delete;
                 
                 //Functionality
                 
@@ -105,11 +101,11 @@ namespace corvusoft
                 //Setters
                 
                 //Operators
-                SessionManager& operator =( const SessionManager& value ) = delete;
+                ResourceCache& operator =( const ResourceCache& value ) = delete;
                 
                 //Properties
         };
     }
 }
 
-#endif  /* _CORVUSOFT_RESTBED_SESSION_MANAGER_H */
+#endif  /* _CORVUSOFT_RESTBED_RESOURCE_CACHE_H */

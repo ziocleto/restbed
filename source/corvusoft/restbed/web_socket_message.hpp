@@ -38,7 +38,7 @@ namespace restbed
             //Friends
             
             //Definitions
-            enum OpCode : uint8_t
+            enum OperationCode : uint8_t
             {
                 CONTINUATION_FRAME     = 0x00,
                 TEXT_FRAME             = 0x01,

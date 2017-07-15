@@ -3,414 +3,184 @@
  */
 
 //System Includes
-#include <utility>
-#include <ciso646>
-#include <algorithm>
 
 //Project Includes
-#include "corvusoft/restbed/uri.hpp"
-#include "corvusoft/restbed/string.hpp"
 #include "corvusoft/restbed/request.hpp"
-#include "corvusoft/restbed/response.hpp"
-#include "corvusoft/restbed/detail/socket_impl.hpp"
-#include "corvusoft/restbed/detail/request_impl.hpp"
-#include "corvusoft/restbed/detail/response_impl.hpp"
 
 //External Includes
 
 //System Namespaces
 using std::map;
-using std::pair;
-using std::stof;
-using std::stod;
 using std::string;
+using std::uint16_t;
 using std::function;
 using std::multimap;
-using std::make_pair;
-using std::unique_ptr;
-using std::shared_ptr;
-using std::make_shared;
-using std::out_of_range;
-using std::invalid_argument;
 
 //Project Namespaces
-using restbed::Common;
-using restbed::detail::RequestImpl;
 
 //External Namespaces
+using corvusoft::core::Bytes;
+using corvusoft::protocol::Message;
 
-namespace restbed
+namespace corvusoft
 {
-    Request::Request( void ) : m_pimpl( new detail::RequestImpl )
+    namespace restbed
     {
-        return;
-    }
-    
-    Request::Request( const Uri& value ) : m_pimpl( new detail::RequestImpl )
-    {
-        m_pimpl->m_uri = make_shared< Uri >( value );
-        m_pimpl->m_path = value.get_path( );
-        m_pimpl->m_port = value.get_port( );
-        m_pimpl->m_host = value.get_authority( );
-        m_pimpl->m_query_parameters = value.get_query_parameters( );
-        m_pimpl->m_protocol = String::uppercase( value.get_scheme( ) );
-        
-        if ( m_pimpl->m_path.empty( ) )
+        Request::Request( void ) : Message( )
         {
-            m_pimpl->m_path = "/";
+            return;
         }
         
-        if ( m_pimpl->m_port == 0 )
+        Request::~Request( void )
         {
-            m_pimpl->m_port = ( m_pimpl->m_protocol == "HTTPS" ) ? 443 : 80;
-        }
-    }
-    
-    Request::~Request( void )
-    {
-        return;
-    }
-    
-    bool Request::has_header( const string& name ) const
-    {
-        return Common::has_parameter( name, m_pimpl->m_headers );
-    }
-    
-    bool Request::has_path_parameter( const string& name ) const
-    {
-        return Common::has_parameter( name, m_pimpl->m_path_parameters );
-    }
-    
-    bool Request::has_query_parameter( const string& name ) const
-    {
-        return Common::has_parameter( name, m_pimpl->m_query_parameters );
-    }
-    
-    uint16_t Request::get_port( void ) const
-    {
-        return m_pimpl->m_port;
-    }
-    
-    double Request::get_version( void ) const
-    {
-        return m_pimpl->m_version;
-    }
-    
-    const Bytes& Request::get_body( void ) const
-    {
-        return m_pimpl->m_body;
-    }
-    
-    const shared_ptr< const Response > Request::get_response( void ) const
-    {
-        return m_pimpl->m_response;
-    }
-    
-    string Request::get_host( const function< string ( const string& ) >& transform ) const
-    {
-        return Common::transform( m_pimpl->m_host, transform );
-    }
-    
-    string Request::get_path( const function< string ( const string& ) >& transform ) const
-    {
-        return Common::transform( m_pimpl->m_path, transform );
-    }
-    
-    string Request::get_method( const function< string ( const string& ) >& transform ) const
-    {
-        return Common::transform( m_pimpl->m_method, transform );
-    }
-    
-    string Request::get_protocol( const function< string ( const string& ) >& transform ) const
-    {
-        return Common::transform( m_pimpl->m_protocol, transform );
-    }
-    
-    void Request::get_body( string& body, const function< string ( const Bytes& ) >& transform ) const
-    {
-        body = ( transform == nullptr ) ? String::to_string( m_pimpl->m_body ) : transform( m_pimpl->m_body );
-    }
-    
-    float Request::get_header( const string& name, const float default_value ) const
-    {
-        float header = 0;
-        
-        try
-        {
-            header = stof( get_header( name ) );
-        }
-        catch ( const out_of_range )
-        {
-            header = default_value;
-        }
-        catch ( const invalid_argument )
-        {
-            header = default_value;
+            return;
         }
         
-        return header;
-    }
-    
-    double Request::get_header( const string& name, const double default_value ) const
-    {
-        double header = 0;
-        
-        try
+        bool Request::has_header( const string& name ) const
         {
-            header = stod( get_header( name ) );
-        }
-        catch ( const out_of_range )
-        {
-            header = default_value;
-        }
-        catch ( const invalid_argument )
-        {
-            header = default_value;
+            return has_property( "header:" + name );
         }
         
-        return header;
-    }
-    
-    string Request::get_header( const string& name, const string& default_value ) const
-    {
-        if ( name.empty( ) )
+        bool Request::has_path_parameter( const string& name ) const
         {
-            return default_value;
+            return has_property( "path:" + name );
         }
         
-        const auto headers = Common::get_parameters( name, m_pimpl->m_headers );
-        return ( headers.empty( ) ) ? default_value : headers.begin( )->second;
-    }
-    
-    string Request::get_header( const string& name, const function< string ( const string& ) >& transform ) const
-    {
-        if ( name.empty( ) )
+        bool Request::has_query_parameter( const string& name ) const
         {
-            return String::empty;
+            return has_property( "query:" + name );
         }
         
-        const auto headers = Common::get_parameters( name, m_pimpl->m_headers );
-        const auto value = ( headers.empty( ) ) ? String::empty : headers.begin( )->second;
-        
-        return Common::transform( value, transform );
-    }
-    
-    multimap< string, string > Request::get_headers( const string& name ) const
-    {
-        return Common::get_parameters( name, m_pimpl->m_headers );
-    }
-    
-    float Request::get_query_parameter( const string& name, const float default_value ) const
-    {
-        float parameter = 0;
-        
-        try
+        uint16_t Request::get_port( void ) const
         {
-            parameter = stof( get_query_parameter( name ) );
-        }
-        catch ( const out_of_range )
-        {
-            parameter = default_value;
-        }
-        catch ( const invalid_argument )
-        {
-            parameter = default_value;
+            uint16_t default_value = 0;
+            return get_property( "version", default_value );
         }
         
-        return parameter;
-    }
-    
-    double Request::get_query_parameter( const string& name, const double default_value ) const
-    {
-        double parameter = 0;
-        
-        try
+        double Request::get_version( void ) const
         {
-            parameter = stod( get_query_parameter( name ) );
-        }
-        catch ( const out_of_range )
-        {
-            parameter = default_value;
-        }
-        catch ( const invalid_argument )
-        {
-            parameter = default_value;
+            double default_value = 0;
+            return get_property( "version", default_value );
         }
         
-        return parameter;
-    }
-    
-    string Request::get_query_parameter( const string& name, const string& default_value ) const
-    {
-        if ( name.empty( ) )
+        const Bytes Request::get_body( void ) const
         {
-            return default_value;
+            static const Bytes default_value { };
+            return get_property( "body", default_value );
         }
         
-        const auto parameters = Common::get_parameters( name, m_pimpl->m_query_parameters );
-        return ( parameters.empty( ) ) ? default_value : parameters.begin( )->second;
-    }
-    
-    string Request::get_query_parameter( const string& name, const function< string ( const string& ) >& transform ) const
-    {
-        if ( name.empty( ) )
+        string Request::get_host( const function< string ( const string& ) >& transform ) const
         {
-            return String::empty;
+            const string value = get_property( "host" );
+            return ( transform == nullptr ) ? value : transform( value );
         }
         
-        const auto parameters = Common::get_parameters( name, m_pimpl->m_query_parameters );
-        const auto value = ( parameters.empty( ) ) ? String::empty : parameters.begin( )->second;
-        
-        return Common::transform( value, transform );
-    }
-    
-    multimap< string, string > Request::get_query_parameters( const string& name ) const
-    {
-        return Common::get_parameters( name, m_pimpl->m_query_parameters );
-    }
-    
-    float Request::get_path_parameter( const string& name, const float default_value ) const
-    {
-        float parameter = 0;
-        
-        try
+        string Request::get_path( const function< string ( const string& ) >& transform ) const
         {
-            parameter = stof( get_path_parameter( name ) );
-        }
-        catch ( const out_of_range )
-        {
-            parameter = default_value;
-        }
-        catch ( const invalid_argument )
-        {
-            parameter = default_value;
+            const string value = get_property( "path" );
+            return ( transform == nullptr ) ? value : transform( value );
         }
         
-        return parameter;
-    }
-    
-    double Request::get_path_parameter( const string& name, const double default_value ) const
-    {
-        double parameter = 0;
-        
-        try
+        string Request::get_method( const function< string ( const string& ) >& transform ) const
         {
-            parameter = stod( get_path_parameter( name ) );
-        }
-        catch ( const out_of_range )
-        {
-            parameter = default_value;
-        }
-        catch ( const invalid_argument )
-        {
-            parameter = default_value;
+            const string value = get_property( "method" );
+            return ( transform == nullptr ) ? value : transform( value );
         }
         
-        return parameter;
-    }
-    
-    string Request::get_path_parameter( const string& name, const string& default_value ) const
-    {
-        if ( name.empty( ) )
+        string Request::get_protocol( const function< string ( const string& ) >& transform ) const
         {
-            return default_value;
+            const string value = get_property( "protocol" );
+            return ( transform == nullptr ) ? value : transform( value );
         }
         
-        const auto parameters = Common::get_parameters( name, m_pimpl->m_path_parameters );
-        return ( parameters.empty( ) ) ? default_value : parameters.begin( )->second;
-    }
-    
-    string Request::get_path_parameter( const string& name, const function< string ( const string& ) >& transform ) const
-    {
-        if ( name.empty( ) )
+        string Request::get_header( const string& name, const string& default_value ) const
         {
-            return String::empty;
+            return get_property( "header:" + name, default_value );
         }
         
-        const auto parameters = Common::get_parameters( name, m_pimpl->m_path_parameters );
-        const auto value = ( parameters.empty( ) ) ? String::empty : parameters.begin( )->second;
-        
-        return Common::transform( value, transform );
-    }
-    
-    map< string, string > Request::get_path_parameters( const string& name ) const
-    {
-        return Common::get_parameters( name, m_pimpl->m_path_parameters );
-    }
-    
-    void Request::set_body( const Bytes& value )
-    {
-        m_pimpl->m_body = value;
-    }
-    
-    void Request::set_body( const string& value )
-    {
-        m_pimpl->m_body = String::to_bytes( value );
-    }
-    
-    void Request::set_port( const uint16_t value )
-    {
-        if ( m_pimpl->m_socket not_eq nullptr )
+        string Request::get_header( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            m_pimpl->m_socket->close( );
+            const string value = get_property( "header:" + name );
+            return ( transform == nullptr ) ? value : transform( value );
         }
         
-        m_pimpl->m_port = value;
-    }
-    
-    void Request::set_version( const double value )
-    {
-        m_pimpl->m_version = value;
-    }
-    
-    void Request::set_path( const string& value )
-    {
-        m_pimpl->m_path = value;
-    }
-    
-    void Request::set_host( const string& value )
-    {
-        if ( m_pimpl->m_socket not_eq nullptr )
+        multimap< string, string > Request::get_headers( const string& ) const
         {
-            m_pimpl->m_socket->close( );
+            multimap< string, string > headers { };
+            
+            for ( const auto& header : get_string_properties( ) )
+            {
+                auto name = header.first;
+                const auto position = name.find( "header:" );
+                
+                if ( position not_eq string::npos )
+                {
+                    name.erase( 0, 7 );
+                    headers.emplace( name, header.second );
+                }
+            }
+            
+            return headers;
         }
         
-        m_pimpl->m_host = value;
-    }
-    
-    void Request::set_method( const string& value )
-    {
-        m_pimpl->m_method = value;
-    }
-    
-    void Request::set_protocol( const string& value )
-    {
-        m_pimpl->m_protocol = value;
-    }
-    
-    void Request::add_header( const string& name, const string& value )
-    {
-        m_pimpl->m_headers.insert( make_pair( name, value ) );
-    }
-    
-    void Request::set_header( const string& name, const string& value )
-    {
-        m_pimpl->m_headers.erase( name );
-        m_pimpl->m_headers.insert( make_pair( name, value ) );
-    }
-    
-    void Request::set_headers( const multimap< string, string >& values )
-    {
-        m_pimpl->m_headers = values;
-    }
-    
-    void Request::set_query_parameter( const string& name, const string& value )
-    {
-        m_pimpl->m_query_parameters.insert( make_pair( name, value ) );
-    }
-    
-    void Request::set_query_parameters( const multimap< string, string >& values )
-    {
-        m_pimpl->m_query_parameters = values;
+        string Request::get_query_parameter( const string& name, const string& default_value ) const
+        {
+            return get_property( "query:" + name, default_value );
+        }
+        
+        string Request::get_query_parameter( const string& name, const function< string ( const string& ) >& transform ) const
+        {
+            const string value = get_property( "query:" + name );
+            return ( transform == nullptr ) ? value : transform( value );
+        }
+        
+        multimap< string, string > Request::get_query_parameters( const string& ) const
+        {
+            multimap< string, string > parameters { };
+            
+            for ( const auto& parameter : get_string_properties( ) )
+            {
+                auto name = parameter.first;
+                const auto position = name.find( "query:" );
+                
+                if ( position not_eq string::npos )
+                {
+                    name.erase( 0, 6 );
+                    parameters.emplace( name, parameter.second );
+                }
+            }
+            
+            return parameters;
+        }
+        
+        string Request::get_path_parameter( const string& name, const string& default_value ) const
+        {
+            return get_property( "path:" + name, default_value );
+        }
+        
+        string Request::get_path_parameter( const string& name, const function< string ( const string& ) >& transform ) const
+        {
+            const string value = get_property( "path:" + name );
+            return ( transform == nullptr ) ? value : transform( value );
+        }
+        
+        map< string, string > Request::get_path_parameters( const string& ) const
+        {
+            map< string, string > parameters { };
+            
+            for ( const auto& parameter : get_string_properties( ) )
+            {
+                auto name = parameter.first;
+                const auto position = name.find( "path:" );
+                
+                if ( position not_eq string::npos )
+                {
+                    name.erase( 0, 5 );
+                    parameters.emplace( name, parameter.second );
+                }
+            }
+            
+            return parameters;
+        }
     }
 }

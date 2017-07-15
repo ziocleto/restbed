@@ -3,451 +3,507 @@
  */
 
 //System Includes
-#include <thread>
-#include <vector>
-#include <utility>
-#include <cstdint>
-#include <ciso646>
-#include <stdexcept>
+#include <map>
 #include <algorithm>
-#include <functional>
 
 //Project Includes
-#include "corvusoft/restbed/uri.hpp"
-#include "corvusoft/restbed/rule.hpp"
-#include "corvusoft/restbed/logger.hpp"
 #include "corvusoft/restbed/service.hpp"
-#include "corvusoft/restbed/session.hpp"
-#include "corvusoft/restbed/resource.hpp"
 #include "corvusoft/restbed/settings.hpp"
-#include "corvusoft/restbed/ssl_settings.hpp"
+#include "corvusoft/restbed/resource.hpp"
+#include "corvusoft/restbed/middleware.hpp"
+#include "corvusoft/restbed/resource_cache.hpp"
 #include "corvusoft/restbed/session_manager.hpp"
 #include "corvusoft/restbed/detail/service_impl.hpp"
-#include "corvusoft/restbed/detail/resource_impl.hpp"
-#include "corvusoft/restbed/detail/web_socket_manager_impl.hpp"
 
 //External Includes
-#include <asio/io_service.hpp>
-#include <asio/steady_timer.hpp>
-
-#ifdef BUILD_SSL
-    #include <asio/ssl.hpp>
-#endif
+#include <corvusoft/core/error.hpp>
+#include <corvusoft/core/logger.hpp>
+#include <corvusoft/core/run_loop.hpp>
+#include <corvusoft/network/socket.hpp>
+#include <corvusoft/network/tcpip_socket.hpp>
+#include <corvusoft/protocol/http.hpp>
+#include <corvusoft/protocol/protocol.hpp>
 
 //System Namespaces
-using std::map;
-using std::bind;
-using std::thread;
+using std::set;
 using std::string;
-using std::vector;
+using std::multimap;
+using std::find;
+using std::bind;
 using std::function;
-using std::exception;
-using std::to_string;
-using std::unique_ptr;
+using std::placeholders::_1;
+using std::placeholders::_2;
 using std::shared_ptr;
-using std::error_code;
 using std::make_shared;
-using std::stable_sort;
-using std::runtime_error;
+using std::error_code;
+using std::make_error_code;
 using std::chrono::seconds;
-using std::invalid_argument;
-using std::chrono::milliseconds;
 using std::chrono::steady_clock;
 using std::chrono::duration_cast;
 
 //Project Namespaces
-using restbed::detail::ServiceImpl;
-using restbed::detail::WebSocketManagerImpl;
+using corvusoft::restbed::detail::ServiceImpl;
 
 //External Namespaces
-using asio::io_service;
-using asio::steady_timer;
+using corvusoft::core::Logger;
+using corvusoft::core::RunLoop;
+using corvusoft::core::success;
+using corvusoft::network::Socket;
+using corvusoft::network::TCPIPSocket;
+using corvusoft::protocol::Protocol;
+using corvusoft::protocol::HTTProtocol;
 
-namespace restbed
+namespace corvusoft
 {
-    Service::Service( void ) : m_pimpl( new ServiceImpl )
+    namespace restbed
     {
-        return;
-    }
-    
-    Service::~Service( void )
-    {
-        try
+        Service::Service( const shared_ptr< RunLoop >& runloop ) : m_pimpl( new ServiceImpl )
         {
-            stop( );
-        }
-        catch ( ... )
-        {
-            m_pimpl->log( Logger::WARNING, "Service failed graceful wind down." );
-        }
-    }
-    
-    bool Service::is_up( void ) const
-    {
-        return m_pimpl->m_uptime not_eq steady_clock::time_point::min( );
-    }
-    
-    bool Service::is_down( void ) const
-    {
-        return not is_up( );
-    }
-    
-    void Service::stop( void )
-    {
-        m_pimpl->m_uptime = steady_clock::time_point::min( );
-        
-        if ( m_pimpl->m_io_service not_eq nullptr )
-        {
-            m_pimpl->m_io_service->stop( );
+            m_pimpl->runloop = ( runloop not_eq nullptr ) ? runloop : make_shared< RunLoop >( );
+            m_pimpl->runloop->set_worker_limit( 1 );//for debug.
         }
         
-        if ( m_pimpl->m_session_manager not_eq nullptr )
+        Service::~Service( void )
         {
-            m_pimpl->m_session_manager->stop( );
-        }
-        
-        for ( auto& worker : m_pimpl->m_workers )
-        {
-            worker->join( );
-        }
-        
-        m_pimpl->m_workers.clear( );
-        
-        if ( m_pimpl->m_logger not_eq nullptr )
-        {
-            m_pimpl->log( Logger::INFO, "Service halted." );
-            m_pimpl->m_logger->stop( );
-        }
-    }
-    
-    void Service::start( const shared_ptr< const Settings >& settings )
-    {
-        m_pimpl->setup_signal_handler( );
-        
-        m_pimpl->m_settings = settings;
-        
-        if ( m_pimpl->m_settings == nullptr )
-        {
-            m_pimpl->m_settings = make_shared< Settings >( );
-        }
-        
-#ifdef BUILD_SSL
-        m_pimpl->m_ssl_settings = m_pimpl->m_settings->get_ssl_settings( );
-#else
-        
-        if ( m_pimpl->m_settings->get_ssl_settings( ) not_eq nullptr )
-        {
-            throw runtime_error( "Not Implemented! Rebuild Restbed with SSL funcationality enabled." );
-        }
-        
-#endif
-        
-        if ( m_pimpl->m_logger not_eq nullptr )
-        {
-            m_pimpl->m_logger->start( m_pimpl->m_settings );
-        }
-        
-        if ( m_pimpl->m_session_manager == nullptr )
-        {
-            m_pimpl->m_session_manager = make_shared< SessionManager >( );
-        }
-        
-        m_pimpl->m_session_manager->start( m_pimpl->m_settings );
-        
-        m_pimpl->m_web_socket_manager = make_shared< WebSocketManagerImpl >( );
-        
-        stable_sort( m_pimpl->m_rules.begin( ), m_pimpl->m_rules.end( ), [ ]( const shared_ptr< const Rule >& lhs, const shared_ptr< const Rule >& rhs )
-        {
-            return lhs->get_priority( ) < rhs->get_priority( );
-        } );
-        
-        m_pimpl->http_start( );
-#ifdef BUILD_SSL
-        m_pimpl->https_start( );
-#endif
-        
-        for ( const auto& route : m_pimpl->m_resource_paths )
-        {
-            auto path = String::format( "/%s/%s", m_pimpl->m_settings->get_root( ).data( ), route.second.data( ) );
-            path = String::replace( "//", "/", path );
-            
-            m_pimpl->log( Logger::INFO, String::format( "Resource published on route '%s'.", path.data( ) ) );
-        }
-        
-        if ( m_pimpl->m_ready_handler not_eq nullptr )
-        {
-            m_pimpl->m_io_service->post( m_pimpl->m_ready_handler );
-        }
-        
-        m_pimpl->m_uptime = steady_clock::now( );
-        unsigned int limit = m_pimpl->m_settings->get_worker_limit( );
-        
-        if ( limit > 0 )
-        {
-            const auto this_thread = 1;
-            limit = limit - this_thread;
-            
-            for ( unsigned int count = 0;  count < limit; count++ )
+            try
             {
-                auto worker = make_shared< thread >( [ this ]( )
-                {
-                    m_pimpl->m_io_service->run( );
-                } );
-                
-                m_pimpl->m_workers.push_back( worker );
+                stop( );
+            }
+            catch ( ... )
+            {
+                m_pimpl->log( "Service failed graceful retirement.", Logger::ERROR );
             }
         }
         
-        m_pimpl->m_io_service->run( );
-    }
-    
-    void Service::restart( const shared_ptr< const Settings >& settings )
-    {
-        try
+        bool Service::is_up( void ) const
         {
-            stop( );
-        }
-        catch ( ... )
-        {
-            m_pimpl->log( Logger::WARNING, "Service failed graceful reboot." );
+            return m_pimpl->uptime not_eq steady_clock::time_point::min( );
         }
         
-        start( settings );
-    }
-    
-    void Service::add_rule( const shared_ptr< Rule >& rule )
-    {
-        if ( is_up( ) )
+        bool Service::is_down( void ) const
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            return not is_up( );
         }
         
-        if ( rule not_eq nullptr )
+        bool Service::is_suspended( void ) const
         {
-            m_pimpl->m_rules.push_back( rule );
-        }
-    }
-    
-    void Service::add_rule( const shared_ptr< Rule >& rule, const int priority )
-    {
-        if ( is_up( ) )
-        {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            return m_pimpl->runloop->is_suspended( );
         }
         
-        if ( rule not_eq nullptr )
+        void Service::resume( void )
         {
-            rule->set_priority( priority );
-            m_pimpl->m_rules.push_back( rule );
-        }
-    }
-    
-    void Service::publish( const shared_ptr< const Resource >& resource )
-    {
-        if ( is_up( ) )
-        {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            m_pimpl->runloop->resume( );
         }
         
-        if ( resource == nullptr )
+        void Service::suspend( void )
         {
-            return;
+            m_pimpl->runloop->suspend( );
         }
         
-        auto paths = resource->m_pimpl->m_paths;
-        
-        if ( not m_pimpl->has_unique_paths( paths ) )
+        void Service::stop( void )
         {
-            throw invalid_argument( "Resource would pollute namespace. Please ensure all published resources have unique paths." );
-        }
-        
-        for ( auto& path : paths )
-        {
-            const string sanitised_path = m_pimpl->sanitise_path( path );
+            m_pimpl->runloop->stop( );
+            m_pimpl->uptime = steady_clock::time_point::min( );
             
-            m_pimpl->m_resource_paths[ sanitised_path ] = path;
-            m_pimpl->m_resource_routes[ sanitised_path ] = resource;
-        }
-        
-        const auto& methods = resource->m_pimpl->m_methods;
-        m_pimpl->m_supported_methods.insert( methods.begin( ), methods.end( ) );
-    }
-    
-    void Service::suppress( const shared_ptr< const Resource >& resource )
-    {
-        if ( is_up( ) )
-        {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
-        }
-        
-        if ( resource == nullptr )
-        {
-            return;
-        }
-        
-        for ( const auto& path : resource->m_pimpl->m_paths )
-        {
-            if ( m_pimpl->m_resource_routes.erase( path ) )
+            for ( auto& layer : m_pimpl->network_layers )
             {
-                m_pimpl->log( Logger::INFO, String::format( "Suppressed resource route '%s'.", path.data( ) ) );
+                layer->teardown( );
+            }
+            
+            for ( auto& layer : m_pimpl->protocol_layers )
+            {
+                layer->teardown( );
+            }
+            
+            for ( auto& layer : m_pimpl->middleware_layers )
+            {
+                layer->teardown( );
+            }
+            
+            if ( m_pimpl->session_manager not_eq nullptr )
+            {
+                m_pimpl->session_manager->teardown( );
+            }
+            
+            if ( m_pimpl->resource_cache not_eq nullptr )
+            {
+                m_pimpl->resource_cache->teardown( );
+            }
+            
+            m_pimpl->log( "Service operations retired." );
+            
+            if ( m_pimpl->logger not_eq nullptr )
+            {
+                m_pimpl->logger->teardown( );
+            }
+        }
+        
+        error_code Service::start( const shared_ptr< const Settings >& settings )
+        {
+            m_pimpl->settings = ( settings == nullptr ) ? make_shared< Settings >( ) : settings;
+            
+            auto failure = m_pimpl->initialise_component( m_pimpl->logger, "Reporting initialised.", "Failed to initialise reporting." );
+            
+            if ( failure )
+            {
+                return failure;
+            }
+            
+            failure = m_pimpl->initialise_component( m_pimpl->resource_cache, "Resource cache initialised.", "Failed to initialise resource cache." );
+            
+            if ( failure )
+            {
+                return failure;
+            }
+            
+            failure = m_pimpl->initialise_component( m_pimpl->session_manager, "Session management initialised.", "Failed to initialise session management." );
+            
+            if ( failure )
+            {
+                return failure;
+            }
+            
+            m_pimpl->log( "Initialising middleware layers" );
+            failure = m_pimpl->initialise_layer< const Middleware >( m_pimpl->middleware_layers );
+            
+            if ( failure )
+            {
+                return failure;
+            }
+            
+            m_pimpl->log( "Initialising protocol layers" );
+            
+            if ( m_pimpl->protocol_layers.empty( ) )
+            {
+                add_protocol_layer( make_shared< HTTProtocol >( ) );
+            }
+            
+            failure = m_pimpl->initialise_layer< Protocol >( m_pimpl->protocol_layers );
+            
+            if ( failure )
+            {
+                return failure;
+            }
+            
+            m_pimpl->log( "Initialising network layers" );
+            
+            if ( m_pimpl->network_layers.empty( ) )
+            {
+                add_network_layer( TCPIPSocket::create( ) );
+            }
+            
+            failure = m_pimpl->initialise_layer< Socket >( m_pimpl->network_layers );
+            
+            if ( failure )
+            {
+                return failure;
+            }
+            
+            for ( const auto& layer : m_pimpl->network_layers )
+            {
+                layer->set_open_handler( [ this, layer ]( const shared_ptr< Socket > )
+                {
+                    m_pimpl->log( " " + layer->get_name( ) + " network layer enabled via " + layer->get_local_endpoint( ) );
+                } );
+                layer->set_error_handler( [ this, layer ]( const shared_ptr< Socket >, const error_code code )
+                {
+                    m_pimpl->error( code, layer->get_name( ) + " network layer failed at " + layer->get_local_endpoint( ), core::Logger::Severity::FATAL );
+                    stop( );
+                } );
+                layer->listen( m_pimpl->settings, m_pimpl->acceptor );
+            }
+            
+            m_pimpl->uptime = steady_clock::now( );
+            m_pimpl->runloop->enqueue( [ this ]( auto code )
+            {
+                m_pimpl->ready_handler( );
+                return code;
+            } );
+            return m_pimpl->runloop->start( );
+        }
+        
+        error_code Service::publish( const shared_ptr< const Resource >& resource )
+        {
+            if ( resource == nullptr )
+            {
+                return make_error_code( std::errc::bad_address );
+            }
+            
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->resources.emplace_back( resource );
+            
+            auto& middleware_layers = resource->get_middleware_layers( );
+            
+            if ( not middleware_layers.empty( ) )
+            {
+                middleware_layers.back( )->set_continue_handler( m_pimpl->execute );
+            }
+            
+            for ( auto& middleware : middleware_layers )
+            {
+                middleware->set_terminate_handler( m_pimpl->terminate );
+            }
+            
+            return success;
+        }
+        
+        error_code Service::suppress( const shared_ptr< const Resource >& resource )
+        {
+            if ( resource == nullptr )
+            {
+                return make_error_code( std::errc::bad_address );
+            }
+            
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            auto position = find( m_pimpl->resources.begin( ), m_pimpl->resources.end( ), resource );
+            m_pimpl->resources.erase( position );
+            
+            return success;
+        }
+        
+        const seconds Service::get_uptime( void ) const
+        {
+            return ( is_down( ) ) ? seconds( 0 ) : duration_cast< seconds >( steady_clock::now( ) - m_pimpl->uptime );
+        }
+        
+        const set< string > Service::get_destinations( void ) const
+        {
+            set< string > endpoints;
+            
+            for ( const auto& layer : m_pimpl->network_layers )
+            {
+                endpoints.insert( layer->get_local_endpoint( ) );
+            }
+            
+            return endpoints;
+        }
+        
+        const shared_ptr< RunLoop > Service::get_runloop( void ) const
+        {
+            return m_pimpl->runloop;
+        }
+        
+        error_code Service::add_network_layer( const shared_ptr< Socket >& value )
+        {
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            if ( value not_eq nullptr )
+            {
+                m_pimpl->network_layers.emplace_back( value );
+            }
+            
+            return success;
+        }
+        
+        error_code Service::add_protocol_layer( const shared_ptr< Protocol >& value )
+        {
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            if ( value not_eq nullptr )
+            {
+                m_pimpl->protocol_layers.emplace_back( value );
+            }
+            
+            return success;
+        }
+        
+        error_code Service::add_middleware_layer( const shared_ptr< Middleware >& value )
+        {
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            if ( value == nullptr )
+            {
+                return success;
+            }
+            
+            if ( m_pimpl->middleware_layers.empty( ) )
+            {
+                value->set_continue_handler( m_pimpl->cache );
             }
             else
             {
-                m_pimpl->log( Logger::WARNING, String::format( "Failed to suppress resource route '%s'; Not Found!", path.data( ) ) );
+                auto& middleware = m_pimpl->middleware_layers.back( );
+                middleware->set_continue_handler( bind( &Middleware::process, value, _1 ) );
+                value->set_continue_handler( m_pimpl->cache );
             }
-        }
-    }
-    
-    void Service::schedule( const function< void ( void ) >& task, const milliseconds& interval )
-    {
-        if ( task == nullptr )
-        {
-            return;
+            
+            value->set_terminate_handler( m_pimpl->terminate );
+            m_pimpl->middleware_layers.emplace_back( value );
+            
+            return success;
         }
         
-        if ( interval == milliseconds::zero( ) )
+        error_code Service::set_default_header( const string& name, const string& value )
         {
-            m_pimpl->m_io_service->post( task );
-            return;
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->default_headers.erase( name );
+            m_pimpl->dynamic_default_headers.erase( name );
+            add_default_header( name, value );
+            
+            return success;
         }
         
-        auto timer = make_shared< steady_timer >( *m_pimpl->m_io_service );
-        timer->expires_from_now( interval );
-        timer->async_wait( [ this, task, interval, timer ]( const error_code& )
+        error_code Service::set_default_header( const string& name, const function< string ( void ) >& value )
         {
-            task( );
-            schedule( task, interval );
-        } );
-    }
-    
-    const seconds Service::get_uptime( void ) const
-    {
-        if ( is_down( ) )
-        {
-            return seconds( 0 );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->default_headers.erase( name );
+            m_pimpl->dynamic_default_headers.erase( name );
+            
+            if ( value not_eq nullptr )
+            {
+                add_default_header( name, value );
+            }
+            
+            return success;
         }
         
-        return duration_cast< seconds >( steady_clock::now( ) - m_pimpl->m_uptime );
-    }
-    
-    const shared_ptr< const Uri > Service::get_http_uri( void ) const
-    {
-        return m_pimpl->get_http_uri( );
-    }
-    
-    const shared_ptr< const Uri > Service::get_https_uri( void ) const
-    {
-        return m_pimpl->get_https_uri( );
-    }
-    
-    void Service::set_logger( const shared_ptr< Logger >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::add_default_header( const string& name, const string& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->default_headers.emplace( name, value );
+            return success;
         }
         
-        m_pimpl->m_logger = value;
-    }
-    
-    void Service::set_session_manager( const shared_ptr< SessionManager >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::add_default_header( const string& name, const function< string ( void ) >& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            if ( value not_eq nullptr )
+            {
+                m_pimpl->dynamic_default_headers.emplace( name, value );
+            }
+            
+            return success;
         }
         
-        m_pimpl->m_session_manager = value;
-    }
-    
-    void Service::set_ready_handler( const function< void ( Service& ) >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::set_logger( const shared_ptr< Logger >& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->logger = value;
+            return success;
         }
         
-        if ( value not_eq nullptr )
+        error_code Service::set_resource_cache( const shared_ptr< ResourceCache >& value )
         {
-            m_pimpl->m_ready_handler = bind( value, std::ref( *this ) );
-        }
-    }
-    
-    void Service::set_signal_handler( const int signal, const function< void ( const int ) >& value )
-    {
-        if ( is_up( ) )
-        {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->resource_cache = value;
+            return success;
         }
         
-        if ( value not_eq nullptr )
+        error_code Service::set_session_manager( const shared_ptr< SessionManager >& value )
         {
-            m_pimpl->m_signal_handlers[ signal ] = value;
-        }
-    }
-    
-    void Service::set_not_found_handler( const function< void ( const shared_ptr< Session > ) >& value )
-    {
-        if ( is_up( ) )
-        {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->session_manager = value;
+            return success;
         }
         
-        m_pimpl->m_not_found_handler = value;
-    }
-    
-    void Service::set_method_not_allowed_handler( const function< void ( const shared_ptr< Session > ) >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::set_error_handler( const function< void ( const error_code ) >& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->error_handler = value;
+            return success;
         }
         
-        m_pimpl->m_method_not_allowed_handler = value;
-    }
-    
-    void Service::set_method_not_implemented_handler( const function< void ( const shared_ptr< Session > ) >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::set_ready_handler( const function< void ( void ) >& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->ready_handler = value;
+            return success;
         }
         
-        m_pimpl->m_method_not_implemented_handler = value;
-    }
-    
-    void Service::set_failed_filter_validation_handler( const function< void ( const shared_ptr< Session > ) >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::set_signal_handler( const int signal, const function< void ( void ) >& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            m_pimpl->runloop->enqueue_when( signal, [ value ]( auto code )
+            {
+                value( );
+                return code;
+            } );
+            return success;
         }
         
-        m_pimpl->m_failed_filter_validation_handler = value;
-    }
-    
-    void Service::set_error_handler( const function< void ( const int, const exception&, const shared_ptr< Session > ) >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::set_resource_not_found_handler( const function< void ( const shared_ptr< Session > ) >& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->resource_not_found_handler = value;
+            return success;
         }
         
-        if ( value == nullptr )
+        error_code Service::set_method_not_allowed_handler( const function< void ( const shared_ptr< Session > ) >& value )
         {
-            m_pimpl->m_error_handler = ServiceImpl::default_error_handler;
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->method_not_allowed_handler = value;
+            return success;
         }
         
-        m_pimpl->m_error_handler = value;
-    }
-    
-    void Service::set_authentication_handler( const function< void ( const shared_ptr< Session >, const function< void ( const shared_ptr< Session > ) >& ) >& value )
-    {
-        if ( is_up( ) )
+        error_code Service::set_method_not_implemented_handler( const function< void ( const shared_ptr< Session > ) >& value )
         {
-            throw runtime_error( "Runtime modifications of the service are prohibited." );
+            if ( is_up( ) and not is_suspended( ) )
+            {
+                return make_error_code( std::errc::operation_in_progress );
+            }
+            
+            m_pimpl->method_not_implemented_handler = value;
+            return success;
         }
-        
-        m_pimpl->m_authentication_handler = value;
     }
 }

@@ -30,8 +30,6 @@ then
 	exit 1
 fi
 
-exec git diff-index --check --cached $against --
-
 ASTYLE=astyle
 ASTYLE_PARAMETERS="--options=tool/astyle/options"
 files=`git-diff-index --diff-filter=ACMR --name-only -r --cached $against --`

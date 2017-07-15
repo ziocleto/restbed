@@ -2,16 +2,16 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _RESTBED_SERVICE_H
-#define _RESTBED_SERVICE_H 1
+#ifndef _CORVUSOFT_RESTBED_SERVICE_H
+#define _CORVUSOFT_RESTBED_SERVICE_H 1
 
 //System Includes
-#include <map>
+#include <set>
 #include <chrono>
 #include <memory>
 #include <string>
-#include <stdexcept>
 #include <functional>
+#include <system_error>
 
 //Project Includes
 
@@ -23,124 +23,155 @@
 
 //External Namespaces
 
-namespace restbed
+namespace corvusoft
 {
     //Forward Declarations
-    class Uri;
-    class Rule;
-    class Logger;
-    class Session;
-    class Resource;
-    class Settings;
-    class SessionManager;
-    
-    namespace detail
+    namespace core
     {
-        class ServiceImpl;
+        class Logger;
+        class RunLoop;
     }
     
-    class Service
+    namespace network
     {
-        public:
-            //Friends
-            
-            //Definitions
-            
-            //Constructors
-            Service( void );
-            
-            virtual ~Service( void );
-            
-            //Functionality
-            bool is_up( void ) const;
-            
-            bool is_down( void ) const;
-            
-            void stop( void );
-            
-            void start( const std::shared_ptr< const Settings >& settings = nullptr );
-            
-            void restart( const std::shared_ptr< const Settings >& settings = nullptr );
-            
-            void add_rule( const std::shared_ptr< Rule >& rule );
-            
-            void add_rule( const std::shared_ptr< Rule >& rule, const int priority );
-            
-            void publish( const std::shared_ptr< const Resource >& resource );
-            
-            void suppress( const std::shared_ptr< const Resource >& resource );
-            
-            void schedule( const std::function< void ( void ) >& task, const std::chrono::milliseconds& interval = std::chrono::milliseconds::zero( ) );
-            
-            //Getters
-            const std::chrono::seconds get_uptime( void ) const;
-            
-            const std::shared_ptr< const Uri > get_http_uri( void ) const;
-            
-            const std::shared_ptr< const Uri > get_https_uri( void ) const;
-            
-            //Setters
-            void set_logger( const std::shared_ptr< Logger >& value );
-            
-            void set_session_manager( const std::shared_ptr< SessionManager >& value );
-            
-            void set_ready_handler( const std::function< void ( Service& ) >& value );
-            
-            void set_signal_handler( const int signal, const std::function< void ( const int ) >& value );
-            
-            void set_not_found_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
-            
-            void set_method_not_allowed_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
-            
-            void set_method_not_implemented_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
-            
-            void set_failed_filter_validation_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
-            
-            void set_error_handler( const std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) >& value );
-            
-            void set_authentication_handler( const std::function< void ( const std::shared_ptr< Session >, const std::function< void ( const std::shared_ptr< Session > ) >& ) >& value );
-            
-            //Operators
-            
-            //Properties
-            
-        protected:
-            //Friends
-            
-            //Definitions
-            
-            //Constructors
-            
-            //Functionality
-            
-            //Getters
-            
-            //Setters
-            
-            //Operators
-            
-            //Properties
-            
-        private:
-            //Friends
-            
-            //Definitions
-            
-            //Constructors
-            Service( const Service& original ) = delete;
-            
-            //Functionality
-            
-            //Getters
-            
-            //Setters
-            
-            //Operators
-            Service& operator =( const Service& value ) = delete;
-            
-            //Properties
-            std::unique_ptr< detail::ServiceImpl > m_pimpl;
-    };
+        class Socket;
+    }
+    
+    namespace protocol
+    {
+        class Protocol;
+    }
+    
+    namespace restbed
+    {
+        //Forward Declarations
+        class Session;
+        class Resource;
+        class Settings;
+        class Middleware;
+        class ResourceCache;
+        class SessionManager;
+        
+        namespace detail
+        {
+            struct ServiceImpl;
+        }
+        
+        class Service final
+        {
+            public:
+                //Friends
+                
+                //Definitions
+                
+                //Constructors
+                Service( const std::shared_ptr< core::RunLoop >& runloop = nullptr );
+                
+                virtual ~Service( void );
+                
+                //Functionality
+                bool is_up( void ) const;
+                
+                bool is_down( void ) const;
+                
+                bool is_suspended( void ) const;
+                
+                void resume( void );
+                
+                void suspend( void );
+                
+                void stop( void );
+                
+                std::error_code start( const std::shared_ptr< const Settings >& settings = nullptr );
+                
+                std::error_code publish( const std::shared_ptr< const Resource >& resource );
+                
+                std::error_code suppress( const std::shared_ptr< const Resource >& resource );
+                
+                //Getters
+                const std::chrono::seconds get_uptime( void ) const;
+                
+                const std::set< std::string > get_destinations( void ) const;
+                
+                const std::shared_ptr< core::RunLoop > get_runloop( void ) const;
+                
+                //Setters
+                std::error_code add_middleware( const std::shared_ptr< Middleware >& value );
+                
+                std::error_code add_network( const std::shared_ptr< network::Socket >& value );
+                
+                std::error_code add_protocol( const std::shared_ptr< protocol::Protocol >& value );
+                
+                std::error_code set_default_header( const std::string& name, const std::string& value );
+                
+                std::error_code set_default_header( const std::string& name, const std::function< std::string ( void ) >& value );
+                
+                std::error_code add_default_header( const std::string& name, const std::string& value );
+                
+                std::error_code add_default_header( const std::string& name, const std::function< std::string ( void ) >& value );
+                
+                std::error_code set_logger( const std::shared_ptr< core::Logger >& value );
+                
+                std::error_code set_resource_cache( const std::shared_ptr< ResourceCache >& value );
+                
+                std::error_code set_session_manager( const std::shared_ptr< SessionManager >& value );
+                
+                std::error_code set_error_handler( const std::function< void ( const std::error_code ) >& value );
+                
+                std::error_code set_ready_handler( const std::function< void ( void ) >& value );
+                
+                std::error_code set_signal_handler( const int signal, const std::function< void ( void ) >& value );
+                
+                std::error_code set_connection_timeout_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
+                
+                std::error_code set_resource_not_found_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
+                
+                std::error_code set_method_not_allowed_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
+                
+                std::error_code set_method_not_implemented_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
+                
+                //Operators
+                
+                //Properties
+                
+            protected:
+                //Friends
+                
+                //Definitions
+                
+                //Constructors
+                
+                //Functionality
+                
+                //Getters
+                
+                //Setters
+                
+                //Operators
+                
+                //Properties
+                
+            private:
+                //Friends
+                
+                //Definitions
+                
+                //Constructors
+                Service( const Service& original ) = delete;
+                
+                //Functionality
+                
+                //Getters
+                
+                //Setters
+                
+                //Operators
+                Service& operator =( const Service& value ) = delete;
+                
+                //Properties
+                std::unique_ptr< detail::ServiceImpl > m_pimpl;
+        };
+    }
 }
 
-#endif  /* _RESTBED_SERVICE_H */
+#endif  /* _CORVUSOFT_RESTBED_SERVICE_H */

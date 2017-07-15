@@ -2,8 +2,8 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _CORVUSOFT_RESTBED_SESSION_MANAGER_H
-#define _CORVUSOFT_RESTBED_SESSION_MANAGER_H 1
+#ifndef _CORVUSOFT_RESTBED_MIDDLEWARE_H
+#define _CORVUSOFT_RESTBED_MIDDLEWARE_H 1
 
 //System Includes
 #include <memory>
@@ -25,6 +25,7 @@ namespace corvusoft
     //Forward Declarations
     namespace core
     {
+        class Logger;
         class RunLoop;
         class Settings;
     }
@@ -34,7 +35,7 @@ namespace corvusoft
         //Forward Declarations
         class Session;
         
-        class SessionManager
+        class Middleware
         {
             public:
                 //Friends
@@ -46,22 +47,24 @@ namespace corvusoft
                 //Functionality
                 virtual std::error_code teardown( void ) noexcept = 0;
                 
-                virtual std::error_code setup( const std::shared_ptr< core::RunLoop >& runloop,
-                                               const std::shared_ptr< const core::Settings >& settings ) noexcept = 0;
+                virtual std::error_code setup( const std::shared_ptr< core::RunLoop > runloop,
+                                               const std::shared_ptr< const core::Settings > settings ) noexcept = 0;
                                                
-                virtual void load( const std::shared_ptr< Session > session,
-                                   const std::function< void ( const std::shared_ptr< Session > ) >& success,
-                                   const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) >& failure ) noexcept = 0;
-                                   
-                virtual void save( const std::shared_ptr< Session > session,
-                                   const std::function< void ( const std::shared_ptr< Session > ) >& success,
-                                   const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) >& failure ) noexcept = 0;
+                virtual void entry( const std::shared_ptr< Session > session ) const = 0;
+                
+                virtual void exit( const std::shared_ptr< Session > session ) const = 0;
+                
                 //Getters
+                virtual std::string get_name( void ) const = 0;
                 
                 //Setters
+                virtual void set_logger( const std::function< void ( const std::string ) >& value ) = 0;
+                
                 virtual void set_error_handler( const std::function< void ( const std::error_code ) >& value ) = 0;
                 
-                virtual void set_log_handler( const std::function< void ( const int, const std::string ) >& value  ) = 0;
+                virtual void set_continue_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value ) = 0;
+                
+                virtual void set_terminate_handler( const std::function< void ( const std::shared_ptr< Session >, std::error_code ) >& value ) = 0;
                 
                 //Operators
                 
@@ -73,12 +76,12 @@ namespace corvusoft
                 //Definitions
                 
                 //Constructors
-                SessionManager( void )
+                Middleware( void )
                 {
                     return;
                 };
                 
-                virtual ~SessionManager( void );
+                virtual ~Middleware( void );
                 
                 //Functionality
                 
@@ -96,7 +99,7 @@ namespace corvusoft
                 //Definitions
                 
                 //Constructors
-                SessionManager( const SessionManager& original ) = delete;
+                Middleware( const Middleware& ) = delete;
                 
                 //Functionality
                 
@@ -105,11 +108,11 @@ namespace corvusoft
                 //Setters
                 
                 //Operators
-                SessionManager& operator =( const SessionManager& value ) = delete;
+                Middleware& operator =( const Middleware& ) = delete;
                 
                 //Properties
         };
     }
 }
 
-#endif  /* _CORVUSOFT_RESTBED_SESSION_MANAGER_H */
+#endif  /* _CORVUSOFT_RESTBED_MIDDLEWARE_H */
