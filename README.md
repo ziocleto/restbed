@@ -129,7 +129,7 @@ Minimum Requirements
 | Resource | Requirement                                     |
 |:--------:|:-----------------------------------------------:|
 | Compiler |            C++11 compliant or above             |
-|    OS    | BSD, Linux, Mac OSX, Windows, Raspbian |
+|    OS    |      BSD, Linux, Mac OSX, Windows, Raspbian     |
 
 Road Map
 --------
@@ -154,7 +154,7 @@ Road Map
 |             [5.0](https://github.com/Corvusoft/restbed/milestones/5.0)              |            Resource Caching             | development |
 |             [5.0](https://github.com/Corvusoft/restbed/milestones/5.0)              |          Runtime Modifications          | development |
 |             [5.0](https://github.com/Corvusoft/restbed/milestones/5.0)              |            HTTP 2 compliance            | development |
-|             [5.0](https://github.com/Corvusoft/restbed/milestones/5.0)              |         Refactor, Reduce, Reuse         |   pending   |
+|             [5.0](https://github.com/Corvusoft/restbed/milestones/5.0)              |         Refactor, Reduce, Reuse         | development |
 
 Contact
 -------

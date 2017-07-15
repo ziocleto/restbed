@@ -1,11 +1,8 @@
-# Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
-
-find_path( catch_INCLUDE catch.hpp HINTS "${PROJECT_SOURCE_DIR}/dependency/catch/include" "/usr/include" "/usr/local/include" "/opt/local/include" )
+find_path( catch_INCLUDE catch.hpp HINTS "${CMAKE_SOURCE_DIR}/dependency/network/dependency/core/dependency/catch/include" )
 
 if ( catch_INCLUDE )
     set( CATCH_FOUND TRUE )
-
-    message( STATUS "${Green}Found Catch include at: ${catch_INCLUDE}${Reset}" )
+    message( STATUS "Located Catch include at: ${catch_INCLUDE}" )
 else ( )
-    message( FATAL_ERROR "${Red}Failed to locate Catch dependency.${Reset}" )
+    message( FATAL_ERROR "Failed to locate Catch dependency." )
 endif ( )
