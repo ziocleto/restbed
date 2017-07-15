@@ -73,14 +73,11 @@ namespace corvusoft
             return headers;
         }
         
-        const function< void ( const shared_ptr< Session > ) > Resource::get_method_not_implemented_handler( void ) const
+        const function< void ( const shared_ptr< Session >, const shared_ptr< Request > ) > Resource::get_method_handler( const string& method ) const
         {
-            return m_pimpl->method_not_implemented_handler;
-        }
-        
-        const function< void ( const shared_ptr< Session > ) > Resource::get_method_handler( const string& method ) const
-        {
-            return ( m_pimpl->method_handlers.count( method ) ) ? m_pimpl->method_handlers.at( method ) : nullptr;
+            return ( m_pimpl->method_handlers.count( method ) ) ? //method case?
+                   m_pimpl->method_handlers.at( method ) :
+                   m_pimpl->method_not_implemented_handler;
         }
         
         void Resource::set_path( const string& value )
@@ -99,20 +96,20 @@ namespace corvusoft
             m_pimpl->case_sensitivity = value;
         }
         
-        void Resource::add_middleware_layer( const shared_ptr< Middleware >& value )
+        void Resource::add_middleware( const shared_ptr< Middleware >& value )
         {
             if ( value == nullptr )
             {
                 return;
             }
             
-            if ( not m_pimpl->middleware_layers.empty( ) )
+            if ( not m_pimpl->middleware.empty( ) )
             {
-                auto& middleware = m_pimpl->middleware_layers.back( );
+                auto& middleware = m_pimpl->middlewareback( );
                 middleware->set_continue_handler( bind( &Middleware::process, value, _1 ) );
             }
             
-            m_pimpl->middleware_layers.emplace_back( value );
+            m_pimpl->middleware.emplace_back( value );
         }
         
         void Resource::set_default_header( const string& name, const string& value )
@@ -154,20 +151,18 @@ namespace corvusoft
             m_pimpl->error_handler = value;
         }
         
-        void Resource::set_method_handler( const string& method, const function< void ( const shared_ptr< Session > ) >& callback )
-        {
-            m_pimpl->method_handlers.emplace( method, callback );
-        }
-        
         void Resource::set_method_not_implemented_handler( const function< void ( const shared_ptr< Session > ) >& value )
         {
             m_pimpl->method_not_implemented_handler = value;
         }
         
+        void Resource::set_method_handler( const string& method, const function< void ( const shared_ptr< Session >, const shared_ptr< Response > ) >& callback )
+        {
+            m_pimpl->method_handlers.emplace( method, callback );
+        }
+        
         bool Resource::operator==( const string& rhs ) const
         {
-            assert( not rhs.empty( ) );
-            
             for ( const auto& lhs : m_pimpl->paths )
                 if ( m_pimpl->compare( lhs, rhs ) )
                 {

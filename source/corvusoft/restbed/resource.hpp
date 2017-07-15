@@ -56,13 +56,11 @@ namespace corvusoft
                 bool has_method_support( const std::string& verb ) const;
                 
                 //Getters
-                const std::vector< std::shared_ptr< Middleware > >& get_middleware_layers( void ) const;
+                const std::vector< std::shared_ptr< Middleware > >& get_middleware( void ) const;
                 
                 const std::multimap< const std::string, const std::string > get_default_headers( void ) const;
                 
-                const std::function< void ( const std::shared_ptr< Session > ) > get_method_not_implemented_handler( void ) const;
-                
-                const std::function< void ( const std::shared_ptr< Session > ) > get_method_handler( const std::string& method ) const;
+                const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Request > ) > get_method_handler( const std::string& method ) const;
                 
                 //Setters
                 void set_path( const std::string& value );
@@ -71,7 +69,7 @@ namespace corvusoft
                 
                 void set_path_case_sensitivity( const bool value );
                 
-                void add_middleware_layer( const std::shared_ptr< Middleware >& value );
+                void add_middleware( const std::shared_ptr< Middleware >& value );
                 
                 void set_default_header( const std::string& name, const std::string& value );
                 
@@ -83,9 +81,9 @@ namespace corvusoft
                 
                 void set_error_handler( const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) >& value );
                 
-                void set_method_handler( const std::string& method, const std::function< void ( const std::shared_ptr< Session > ) >& callback );
-                
                 void set_method_not_implemented_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
+                
+                void set_method_handler( const std::string& method, const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Request > ) >& callback );
                 
                 //Operators
                 bool operator==( const std::string& rhs ) const;
