@@ -25,7 +25,6 @@ namespace corvusoft
     //Forward Declarations
     namespace core
     {
-        class Logger;
         class RunLoop;
         class Settings;
     }

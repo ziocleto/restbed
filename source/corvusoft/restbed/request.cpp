@@ -38,69 +38,69 @@ namespace corvusoft
         
         bool Request::has_header( const string& name ) const
         {
-            return has_property( "header:" + name );
+            return has( "request:header:" + name );
         }
         
         bool Request::has_path_parameter( const string& name ) const
         {
-            return has_property( "path:" + name );
+            return has( "request:parameter:" + name );
         }
         
         bool Request::has_query_parameter( const string& name ) const
         {
-            return has_property( "query:" + name );
-        }
-        
-        uint16_t Request::get_port( void ) const
-        {
-            uint16_t default_value = 0;
-            return get_property( "version", default_value );
+            return has( "request:query:" + name );
         }
         
         double Request::get_version( void ) const
         {
             double default_value = 0;
-            return get_property( "version", default_value );
+            return get( "request:version", default_value );
+        }
+        
+        uint16_t Request::get_port( void ) const
+        {
+            uint16_t default_value = 0;
+            return get( "request:port", default_value );
         }
         
         const Bytes Request::get_body( void ) const
         {
             static const Bytes default_value { };
-            return get_property( "body", default_value );
+            return get( "request:body", default_value );
         }
         
         string Request::get_host( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_property( "host" );
+            const string value = get( "request:host" );
             return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_path( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_property( "path" );
+            const string value = get( "request:path" );
             return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_method( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_property( "method" );
+            const string value = get( "request:method" );
             return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_protocol( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_property( "protocol" );
+            const string value = get( "request:protocol" );
             return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_header( const string& name, const string& default_value ) const
         {
-            return get_property( "header:" + name, default_value );
+            return get( "request:header:" + name, default_value );
         }
         
         string Request::get_header( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_property( "header:" + name );
+            const string value = get( "request:header:" + name );
             return ( transform == nullptr ) ? value : transform( value );
         }
         
@@ -111,11 +111,11 @@ namespace corvusoft
             for ( const auto& header : get_string_properties( ) )
             {
                 auto name = header.first;
-                const auto position = name.find( "header:" );
+                const auto position = name.find( "request:header:" );
                 
                 if ( position not_eq string::npos )
                 {
-                    name.erase( 0, 7 );
+                    name.erase( 0, 15 );
                     headers.emplace( name, header.second );
                 }
             }
@@ -125,12 +125,12 @@ namespace corvusoft
         
         string Request::get_query_parameter( const string& name, const string& default_value ) const
         {
-            return get_property( "query:" + name, default_value );
+            return get( "request:query:" + name, default_value );
         }
         
         string Request::get_query_parameter( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_property( "query:" + name );
+            const string value = get( "request:query:" + name );
             return ( transform == nullptr ) ? value : transform( value );
         }
         
@@ -141,7 +141,7 @@ namespace corvusoft
             for ( const auto& parameter : get_string_properties( ) )
             {
                 auto name = parameter.first;
-                const auto position = name.find( "query:" );
+                const auto position = name.find( "request:query:" );
                 
                 if ( position not_eq string::npos )
                 {
@@ -155,12 +155,12 @@ namespace corvusoft
         
         string Request::get_path_parameter( const string& name, const string& default_value ) const
         {
-            return get_property( "path:" + name, default_value );
+            return get( "request:parameter" + name, default_value );
         }
         
         string Request::get_path_parameter( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_property( "path:" + name );
+            const string value = get( "request:parameter:" + name );
             return ( transform == nullptr ) ? value : transform( value );
         }
         
@@ -171,11 +171,11 @@ namespace corvusoft
             for ( const auto& parameter : get_string_properties( ) )
             {
                 auto name = parameter.first;
-                const auto position = name.find( "path:" );
+                const auto position = name.find( "request:parameter:" );
                 
                 if ( position not_eq string::npos )
                 {
-                    name.erase( 0, 5 );
+                    name.erase( 0, 18 );
                     parameters.emplace( name, parameter.second );
                 }
             }

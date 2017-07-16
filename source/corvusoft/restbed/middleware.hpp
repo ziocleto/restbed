@@ -25,7 +25,6 @@ namespace corvusoft
     //Forward Declarations
     namespace core
     {
-        class Logger;
         class RunLoop;
         class Settings;
     }
@@ -50,21 +49,16 @@ namespace corvusoft
                 virtual std::error_code setup( const std::shared_ptr< core::RunLoop > runloop,
                                                const std::shared_ptr< const core::Settings > settings ) noexcept = 0;
                                                
-                virtual void entry( const std::shared_ptr< Session > session ) const = 0;
+                virtual std::error_code before( const std::shared_ptr< Session > session, const std::shared_ptr< Request > ) const = 0;
                 
-                virtual void exit( const std::shared_ptr< Session > session ) const = 0;
+                virtual std::error_code after( const std::shared_ptr< Session > session, const std::shared_ptr< Response > ) const = 0;
                 
                 //Getters
-                virtual std::string get_name( void ) const = 0;
                 
                 //Setters
-                virtual void set_logger( const std::function< void ( const std::string ) >& value ) = 0;
-                
                 virtual void set_error_handler( const std::function< void ( const std::error_code ) >& value ) = 0;
                 
-                virtual void set_continue_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value ) = 0;
-                
-                virtual void set_terminate_handler( const std::function< void ( const std::shared_ptr< Session >, std::error_code ) >& value ) = 0;
+                virtual void set_log_handler( const std::function< void ( const int, const std::string ) >& value ) = 0;
                 
                 //Operators
                 

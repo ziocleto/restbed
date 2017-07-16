@@ -110,7 +110,7 @@ namespace corvusoft
                 
                 std::error_code add_default_header( const std::string& name, const std::function< std::string ( void ) >& value );
                 
-                std::error_code set_logger( const std::shared_ptr< core::Logger >& value );
+                std::error_code set_log_handler( const std::shared_ptr< core::Logger >& value );
                 
                 std::error_code set_resource_cache( const std::shared_ptr< ResourceCache >& value );
                 
