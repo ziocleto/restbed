@@ -2,31 +2,35 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _RESTBED_DETAIL_SERVICE_IMPL_H
-#define _RESTBED_DETAIL_SERVICE_IMPL_H 1
+#ifndef _CORVUSOFT_RESTBED_DETAIL_SERVICE_IMPL_H
+#define _CORVUSOFT_RESTBED_DETAIL_SERVICE_IMPL_H 1
 
 //System Includes
-#include <set>
 #include <map>
 #include <chrono>
-#include <thread>
-#include <memory>
-#include <string>
 #include <vector>
-#include <stdexcept>
+#include <memory>
+#include <cstdio>
+#include <cassert>
+#include <algorithm>
 #include <functional>
 #include <system_error>
 
 //Project Includes
+#include <corvusoft/restbed/session.hpp>
+#include <corvusoft/restbed/request.hpp>
+#include <corvusoft/restbed/resource.hpp>
+#include <corvusoft/restbed/settings.hpp>
+#include <corvusoft/restbed/middleware.hpp>
+#include <corvusoft/restbed/status_code.hpp>
+#include <corvusoft/restbed/resource_cache.hpp>
+#include <corvusoft/restbed/session_manager.hpp>
 
 //External Includes
-#include <asio/ip/tcp.hpp>
-#include <asio/signal_set.hpp>
-#include <asio/io_service.hpp>
-
-#ifdef BUILD_SSL
-    #include <asio/ssl.hpp>
-#endif
+#include <corvusoft/core/error.hpp>
+#include <corvusoft/core/logger.hpp>
+#include <corvusoft/network/socket.hpp>
+#include <corvusoft/protocol/protocol.hpp>
 
 //System Namespaces
 
@@ -34,183 +38,410 @@
 
 //External Namespaces
 
-namespace restbed
+namespace corvusoft
 {
     //Forward Declarations
-    class Uri;
-    class Rule;
-    class Logger;
-    class Session;
-    class Resource;
-    class Settings;
-    class SessionManager;
-    class SSLSettings;
+    namespace core
+    {
+        class RunLoop;
+    }
     
-    namespace detail
+    namespace network
+    {
+        class Socket;
+    }
+    
+    namespace restbed
     {
         //Forward Declarations
-        class WebSocketManagerImpl;
         
-        class ServiceImpl
+        namespace detail
         {
-            public:
-                //Friends
-                
-                //Definitions
-                
-                //Constructors
-                ServiceImpl( void );
-                
-                virtual ~ServiceImpl( void );
-                
-                //Functionality
-                void http_start( void );
-                
-                void http_listen( void ) const;
-#ifdef BUILD_SSL
-                void https_start( void );
-                
-                void https_listen( void ) const;
-                
-                void create_ssl_session( const std::shared_ptr< asio::ssl::stream< asio::ip::tcp::socket > >& socket, const std::error_code& error ) const;
-#endif
-                void setup_signal_handler( );
-                
-                void signal_handler( const std::error_code& error, const int signal_number ) const;
-                
-                std::string sanitise_path( const std::string& path ) const;
-                
-                void not_found( const std::shared_ptr< Session > session ) const;
-                
-                bool has_unique_paths( const std::set< std::string >& paths ) const;
-                
-                void log( const Logger::Level level, const std::string& message ) const;
-                
-                void method_not_allowed( const std::shared_ptr< Session > session ) const;
-                
-                void method_not_implemented( const std::shared_ptr< Session > session ) const;
-                
-                void failed_filter_validation( const std::shared_ptr< Session > session ) const;
-                
-                void router( const std::shared_ptr< Session > session ) const;
-                
-                void create_session( const std::shared_ptr< asio::ip::tcp::socket >& socket, const std::error_code& error ) const;
-                
-                void extract_path_parameters( const std::string& sanitised_path, const std::shared_ptr< const Request >& request ) const;
-                
-                std::function< void ( const std::shared_ptr< Session > ) > find_method_handler( const std::shared_ptr< Session > session ) const;
-                
-                void authenticate( const std::shared_ptr< Session > session ) const;
-                
-                bool resource_router( const std::shared_ptr< Session > session, const std::pair< std::string, std::shared_ptr< const Resource > >& route ) const;
-                
-                static void default_error_handler( const int status, const std::exception& error, const std::shared_ptr< Session > session );
-                
-                static void discard_request( std::istream& stream );
-                
-                static const std::map< std::string, std::string > parse_request_line( std::istream& stream );
-                
-                static const std::multimap< std::string, std::string > parse_request_headers( std::istream& stream );
-                
-                void parse_request( const std::error_code& error, std::size_t length, const std::shared_ptr< Session > session ) const;
-                
-                //Getters
-                const std::shared_ptr< const Uri > get_http_uri( void ) const;
-                
-                const std::shared_ptr< const Uri > get_https_uri( void ) const;
-                
-                const std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > get_error_handler( const std::shared_ptr< Session >& session ) const;
-                
-                //Setters
-                
-                //Operators
-                
-                //Properties
-                std::chrono::steady_clock::time_point m_uptime;
-                
-                std::shared_ptr< Logger > m_logger;
-                
-                std::set< std::string > m_supported_methods;
-                
-                std::shared_ptr< const Settings > m_settings;
-                
-                std::shared_ptr< asio::io_service > m_io_service;
-                
-                std::shared_ptr< asio::signal_set > m_signal_set;
-                
-                std::shared_ptr< SessionManager > m_session_manager;
-                
-                std::shared_ptr< WebSocketManagerImpl > m_web_socket_manager;
-                
-                std::vector< std::shared_ptr< Rule > > m_rules;
-                
-                std::vector< std::shared_ptr< std::thread > > m_workers;
-#ifdef BUILD_SSL
-                std::shared_ptr< const SSLSettings > m_ssl_settings;
-                
-                std::shared_ptr< asio::ssl::context > m_ssl_context;
-                
-                std::shared_ptr< asio::ip::tcp::acceptor > m_ssl_acceptor;
-#endif
-                std::shared_ptr< asio::ip::tcp::acceptor > m_acceptor;
-                
-                std::map< std::string, std::string > m_resource_paths;
-                
-                std::map< std::string, std::shared_ptr< const Resource > > m_resource_routes;
-                
-                std::function< void ( void ) > m_ready_handler;
-                
-                std::map< int, std::function< void ( const int ) > > m_signal_handlers;
-                
-                std::function< void ( const std::shared_ptr< Session > ) > m_not_found_handler;
-                
-                std::function< void ( const std::shared_ptr< Session > ) > m_method_not_allowed_handler;
-                
-                std::function< void ( const std::shared_ptr< Session > ) > m_method_not_implemented_handler;
-                
-                std::function< void ( const std::shared_ptr< Session > ) > m_failed_filter_validation_handler;
-                
-                std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > m_error_handler;
-                
-                std::function< void ( const std::shared_ptr< Session >, const std::function< void ( const std::shared_ptr< Session > ) >& ) > m_authentication_handler;
-                
-            protected:
-                //Friends
-                
-                //Definitions
-                
-                //Constructors
-                
-                //Functionality
-                
-                //Getters
-                
-                //Setters
-                
-                //Operators
-                
-                //Properties
-                
-            private:
-                //Friends
-                
-                //Definitions
-                
-                //Constructors
-                ServiceImpl( const ServiceImpl& original ) = delete;
-                
-                //Functionality
-                
-                //Getters
-                
-                //Setters
-                
-                //Operators
-                ServiceImpl& operator =( const ServiceImpl& value ) = delete;
-                
-                //Properties
-        };
+            //Forward Declarations
+            
+            struct ServiceImpl
+            {
+                std::shared_ptr< core::Logger > logger = nullptr;
+                
+                std::shared_ptr< core::RunLoop > runloop = nullptr;
+                
+                std::shared_ptr< const Settings > settings = nullptr;
+                
+                std::shared_ptr< ResourceCache > resource_cache = nullptr;
+                
+                std::shared_ptr< SessionManager > session_manager = nullptr;
+                
+                std::chrono::steady_clock::time_point uptime = std::chrono::steady_clock::time_point::min( );
+                
+                std::vector< std::shared_ptr< const Resource > > resources { };
+                
+                std::vector< std::shared_ptr< Middleware > > middleware_layers { };
+                
+                std::vector< std::shared_ptr< network::Socket > > network_layers { };
+                
+                std::vector< std::shared_ptr< protocol::Protocol > > protocol_layers { };
+                
+                std::multimap< const std::string, const std::string > default_headers { };
+                
+                std::multimap< const std::string, const std::function< std::string ( void ) > > dynamic_default_headers { };
+                
+                std::function< void ( void ) > ready_handler = nullptr;
+                
+                std::function< void ( const std::error_code ) > error_handler = nullptr;
+                
+                std::function< void ( const std::shared_ptr< Session > ) > resource_not_found_handler = nullptr;
+                
+                std::function< void ( const std::shared_ptr< Session > ) > method_not_allowed_handler = nullptr;
+                
+                std::function< void ( const std::shared_ptr< Session > ) > method_not_implemented_handler = nullptr;
+                
+                std::vector< std::shared_ptr< network::Socket > > sockets { }; //make sure to delete on destroy/timeout.
+                
+                const std::function< std::error_code ( const std::shared_ptr< network::Socket > ) > acceptor = [ this ]( auto socket )
+                {
+                    assert( socket not_eq nullptr );
+                    
+                    //socket->set_open_handler( load );
+                    socket->set_message_handler( load );
+                    //socket->set_close_handler( std::bind( Protocol::close_handler, protocol ) ); //session->unload( ); sockets.erase( );
+                    //socket->set_error_handler( std::bind( Protocol::error_handler, protocol ) );
+                    sockets.push_back( socket );
+                    
+                    return core::success;
+                };
+                
+                const std::function< void ( const std::shared_ptr< network::Socket > ) > load = [ this ]( auto socket )
+                {
+                    assert( socket not_eq nullptr );
+                    
+                    std::shared_ptr< protocol::Protocol > protocol = load_protocol( socket );
+                    
+                    if ( protocol == nullptr )
+                        return error( std::make_error_code( std::errc::protocol_not_supported ),
+                                      "Failed to locate appropriate protocol layer, terminating socket connection." );
+                                      
+                    auto session = Session::create( socket, protocol, logger );
+                    
+                    if ( session_manager == nullptr )
+                    {
+                        parse( socket, session );
+                    }
+                    else
+                    {
+                        const auto parse_wrapper = [ this ]( auto session )
+                        {
+                            parse( session->get_socket( ), session );
+                        };
+                        session_manager->load( session, parse_wrapper, terminate );
+                    }
+                    
+                    socket->set_message_handler( std::bind( parse, std::placeholders::_1, session ) );
+                };
+                
+                const std::function< void ( const std::shared_ptr< network::Socket >, const std::shared_ptr< Session > ) > parse = [ this ]( auto socket, auto session )
+                {
+                    assert( socket not_eq nullptr );
+                    assert( session not_eq nullptr );
+                    
+                    auto protocol = session->get_protocol( );
+                    assert( protocol not_eq nullptr );
+                    
+                    auto message = std::make_shared< Request >( ); //we need to set the port of the request.
+                    auto failure = protocol->parse( socket, message );
+                    
+                    if ( failure )
+                    {
+                        error( failure, "Protocol failed to parse request." );
+                        return;
+                    }
+                    
+                    session->set_request( message );
+                    
+                    if ( middleware_layers.empty( ) )
+                    {
+                        cache( session );
+                    }
+                    else
+                    {
+                        middleware_layers.front( )->process( session );
+                    }
+                };
+                
+                const std::function< void ( const std::shared_ptr< Session > ) > cache = [ this ]( auto session )
+                {
+                    assert( session not_eq nullptr );
+                    
+                    if ( resource_cache == nullptr )
+                    {
+                        route( session );
+                    }
+                    else
+                    {
+                        resource_cache->load( session, route, terminate );
+                    }
+                };
+                
+                const std::function< void ( const std::shared_ptr< Session > ) > route = [ this ]( auto session )
+                {
+                    //force dev to supply bot the /resource and /resource/ paths if they want them.
+                    //this allows you to have different behaviour for /resource and /resource/ if you wnat.
+                    assert( session not_eq nullptr );
+                    
+                    auto request = session->get_request( );
+                    assert( request not_eq nullptr );
+                    
+                    auto path = request->get_path( );
+                    auto root = settings->get_root( );
+                    
+                    if ( not root.empty( ) )
+                    {
+                        if ( path.find( root ) not_eq std::string::npos )
+                        {
+                            path.erase( 0, root.length( ) );
+                        }
+                        else
+                        {
+                            return resource_not_found( session );
+                        }
+                    }
+                    
+                    size_t position = path.find( "//" );
+                    
+                    while ( position not_eq std::string::npos )
+                    {
+                        path.replace( position, 2, "/" );
+                        position++;
+                    }
+                    
+                    std::shared_ptr< const Resource > resource = nullptr;
+                    
+                    for ( const auto& asset : resources )
+                        if ( *asset == path )
+                        {
+                            resource = asset;
+                            break;
+                        }
+                        
+                    if ( resource == nullptr )
+                    {
+                        return resource_not_found( session );
+                    }
+                    
+                    session->set_resource( resource );
+                    
+                    auto& middleware_layers = resource->get_middleware_layers( );
+                    
+                    if ( middleware_layers.empty( ) )
+                    {
+                        execute( session );
+                    }
+                    else
+                    {
+                        middleware_layers.front( )->process( session );
+                    }
+                };
+                
+                const std::function< void ( const std::shared_ptr< Session > ) > execute = [ this ]( auto session )
+                {
+                    assert( session not_eq nullptr );
+                    
+                    auto request = session->get_request( );
+                    assert( request not_eq nullptr );
+                    
+                    auto resource = session->get_resource( );
+                    assert( resource not_eq nullptr );
+                    
+                    auto handler = resource->get_method_handler( request->get_method( ) );
+                    
+                    ( handler not_eq nullptr ) ? handler( session ) : method_not_found( session );
+                };
+                
+                const std::function< void ( const std::shared_ptr< Session >, std::error_code ) > terminate = [ this ]( auto session, auto code )
+                {
+                    assert( session not_eq nullptr );
+                    
+                    if ( code or session == nullptr )
+                    {
+                        return;
+                    }
+                    
+                    return;
+                };
+                
+                void resource_not_found( const std::shared_ptr< Session > session )
+                {
+                    assert( session not_eq nullptr );
+                    
+                    if ( resource_not_found_handler not_eq nullptr )
+                    {
+                        return resource_not_found_handler( session );
+                    }
+                    
+                    make_response( NOT_FOUND, session );
+                }
+                
+                void method_not_found( const std::shared_ptr< Session > session )
+                {
+                    assert( session  not_eq nullptr );
+                    
+                    const auto& request = session->get_request( );
+                    const auto method = request->get_method( );
+                    
+                    bool method_supported = false;
+                    
+                    for ( const auto& resource : resources )
+                        if ( resource->has_method_support( method ) )
+                        {
+                            method_supported = true;
+                            break;
+                        }
+                        
+                    if ( method_supported )
+                    {
+                        method_not_implemented( session );
+                    }
+                    else
+                    {
+                        method_not_allowed( session );
+                    }
+                }
+                
+                void method_not_allowed( const std::shared_ptr< Session > session )
+                {
+                    assert( session not_eq nullptr );
+                    
+                    if ( method_not_allowed_handler not_eq nullptr )
+                    {
+                        return method_not_allowed_handler( session );
+                    }
+                    
+                    make_response( METHOD_NOT_ALLOWED, session );
+                }
+                
+                void method_not_implemented( const std::shared_ptr< Session > session )
+                {
+                    assert( session not_eq nullptr );
+                    
+                    const auto resource = session->get_resource( );
+                    assert( resource not_eq nullptr );
+                    
+                    const auto handler = resource->get_method_not_implemented_handler( );
+                    
+                    if ( handler not_eq nullptr )
+                    {
+                        return handler( session );
+                    }
+                    
+                    if ( method_not_implemented_handler not_eq nullptr )
+                    {
+                        return method_not_implemented_handler( session );
+                    }
+                    
+                    make_response( NOT_IMPLEMENTED, session );
+                }
+                
+                std::shared_ptr< protocol::Protocol > load_protocol( const std::shared_ptr< network::Socket > socket )
+                {
+                    static std::error_code failure { };
+                    
+                    for ( const auto& layer : protocol_layers )
+                    {
+                        failure = layer->accept( socket );
+                        
+                        if ( not failure )
+                        {
+                            return layer;
+                        }
+                        else if ( failure not_eq std::errc::wrong_protocol_type )
+                        {
+                            error( failure, layer->get_name( ) + " protocol layer failed during request triage." );
+                            break;
+                        }
+                    }
+                    
+                    return nullptr;
+                }
+                
+                void make_response( const int status, const std::shared_ptr< Session > session )
+                {
+                    assert( session not_eq nullptr );
+                    
+                    std::multimap< const std::string, const std::string > headers = default_headers;
+                    
+                    for ( const auto header : dynamic_default_headers )
+                    {
+                        headers.emplace( header.first, header.second( ) );
+                    }
+                    
+                    session->close( status, headers );
+                }
+                
+                void log( const std::string& message, const core::Logger::Severity severity = core::Logger::Severity::INFO )
+                {
+                    std::error_code error { };
+                    
+                    if ( logger not_eq nullptr )
+                    {
+                        error = logger->log_if( not message.empty( ), severity, message );
+                    }
+                    
+                    if ( error )
+                    {
+                        fprintf( stderr, "Logger failed with '%s' when reporting: %s\n", error.message( ).data( ), message.data( ) );
+                    }
+                }
+                
+                std::error_code error( const std::error_code& failure, const std::string& message, const core::Logger::Severity severity = core::Logger::Severity::ERROR )
+                {
+                    if ( error_handler not_eq nullptr )
+                    {
+                        error_handler( failure );
+                    }
+                    
+                    log( message, severity );
+                    log( failure.message( ), severity );
+                    return failure;
+                }
+                
+                template< typename Type >
+                std::error_code initialise_component( Type& component, const std::string&& success_message, const std::string&& failure_message )
+                {
+                    assert( component not_eq nullptr );
+                    
+                    std::error_code failure = component->setup( runloop, settings );
+                    
+                    if ( failure )
+                    {
+                        error( failure, failure_message );
+                    }
+                    else
+                    {
+                        log( success_message );
+                    }
+                    
+                    return failure;
+                }
+                
+                template< typename Type, typename Arg >
+                std::error_code initialise_layer( Arg& layers )
+                {
+                    std::error_code failure { };
+                    
+                    for ( const auto& layer : layers )
+                    {
+                        failure = initialise_component( layer, " " + layer->get_name( ) + " layer initialised.", "Failed to initialise " + layer->get_name( ) + " layer." );
+                        
+                        if ( failure )
+                        {
+                            return failure;
+                        }
+                    }
+                    
+                    return failure;
+                }
+            };
+        }
     }
 }
 
-#endif  /* _RESTBED_DETAIL_SERVICE_IMPL_H */
+#endif  /* _CORVUSOFT_RESTBED_DETAIL_SERVICE_IMPL_H */

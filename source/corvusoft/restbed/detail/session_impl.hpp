@@ -2,21 +2,20 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _RESTBED_DETAIL_SESSION_IMPL_H
-#define _RESTBED_DETAIL_SESSION_IMPL_H 1
+#ifndef _CORVUSOFT_RESTBED_DETAIL_SESSION_IMPL_H
+#define _CORVUSOFT_RESTBED_DETAIL_SESSION_IMPL_H 1
 
 //System Includes
 #include <map>
 #include <string>
 #include <memory>
-#include <istream>
 #include <functional>
-#include <system_error>
 
 //Project Includes
-#include "corvusoft/restbed/byte.hpp"
+#include "corvusoft/restbed/session_data.hpp"
 
 //External Includes
+#include <corvusoft/network/socket.hpp>
 
 //System Namespaces
 
@@ -24,105 +23,68 @@
 
 //External Namespaces
 
-namespace restbed
+namespace corvusoft
 {
     //Forward Declarations
-    class Session;
-    class Request;
-    class Response;
-    class Resource;
-    class Settings;
-    class SessionManager;
+    namespace core
+    {
+        class Logger;
+        class RunLoop;
+    }
     
-    namespace detail
+    namespace network
+    {
+        class Socket;
+    }
+    
+    namespace protocol
+    {
+        class Protocol;
+    }
+    
+    namespace restbed
     {
         //Forward Declarations
-        class WebSocketManagerImpl;
+        class Request;
+        class Resource;
         
-        class SessionImpl
+        namespace detail
         {
-            public:
-                //Friends
+            //Forward Declarations
+            
+            struct SessionImpl
+            {
+                std::shared_ptr< SessionData > data = nullptr;
                 
-                //Definitions
+                std::shared_ptr< const Request > request = nullptr;
                 
-                //Constructors
-                SessionImpl( void );
+                std::shared_ptr< const Resource > resource = nullptr;
                 
-                SessionImpl( const SessionImpl& original ) = delete;
+                std::shared_ptr< core::Logger > logger = nullptr;
                 
-                virtual ~SessionImpl( void );
+                std::shared_ptr< core::RunLoop > runloop = nullptr;
                 
-                //Functionality
-                void fetch_body( const std::size_t length, const std::shared_ptr< Session > session, const std::function< void ( const std::shared_ptr< Session >, const Bytes& ) >& callback ) const;
+                std::shared_ptr< network::Socket > socket = nullptr;
                 
-                void transmit( const Response& response, const std::function< void ( const std::error_code&, std::size_t ) >& callback ) const;
+                std::shared_ptr< protocol::Protocol > protocol = nullptr;
                 
-                //Getters
-                const std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > get_error_handler( void );
+                std::multimap< const std::string, const std::string > default_headers { };
                 
-                //Setters
+                std::multimap< const std::string, const std::function< std::string ( void ) > > dynamic_default_headers { };
                 
-                //Operators
-                SessionImpl& operator =( const SessionImpl& value ) = delete;
-                
-                //Properties
-                std::string m_id;
-                
-                std::shared_ptr< const Request > m_request;
-                
-                std::shared_ptr< const Resource > m_resource;
-                
-                std::shared_ptr< const Settings > m_settings;
-                
-                std::shared_ptr< SessionManager > m_manager;
-                
-                std::shared_ptr< WebSocketManagerImpl > m_web_socket_manager;
-                
-                std::multimap< std::string, std::string > m_headers;
-                
-                std::map< std::string, const ContextValue > m_context;
-                
-                std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > m_error_handler;
-                
-                std::function< void (  const std::error_code& error, std::size_t length, const std::shared_ptr< Session > ) > m_keep_alive_callback;
-                
-            protected:
-                //Friends
-                
-                //Definitions
-                
-                //Constructors
-                
-                //Functionality
-                
-                //Getters
-                
-                //Setters
-                
-                //Operators
-                
-                //Properties
-                
-            private:
-                //Friends
-                
-                //Definitions
-                
-                //Constructors
-                
-                //Functionality
-                
-                //Getters
-                
-                //Setters
-                
-                //Operators
-                
-                //Properties
-                bool m_error_handler_invoked;
-        };
+                const std::function< void ( const std::shared_ptr< Session > session, const std::shared_ptr< network::Socket > socket, const std::function< void ( const std::shared_ptr< Session > ) > success ) > success_wrapper = [ ]( auto session, auto socket, auto success )
+                {
+                    assert( socket not_eq nullptr );
+                    socket->close( );
+                    
+                    if ( success not_eq nullptr )
+                    {
+                        success( session );
+                    }
+                };
+            };
+        }
     }
 }
 
-#endif  /* _RESTBED_DETAIL_SESSION_IMPL_H */
+#endif  /* _CORVUSOFT_RESTBED_DETAIL_SESSION_IMPL_H */
