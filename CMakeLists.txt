@@ -1,12 +1,12 @@
 cmake_minimum_required( VERSION 3.1.0 FATAL_ERROR )
 
-project( "restbed" VERSION 5.0.0 )
+project( "restbed" VERSION 5.0.0 LANGUAGES CXX )
 message( "Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved." )
 
 #
 # Dependencies
 #
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" )
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules" )
 
 find_package( core    REQUIRED )
 find_package( runloop REQUIRED )
@@ -17,10 +17,10 @@ find_package( catch   REQUIRED )
 # Configuration
 #
 set( CMAKE_INSTALL_LIBDIR "library" )
-set( INCLUDE_DIR "${CMAKE_SOURCE_DIR}/source" )
-set( SOURCE_DIR  "${CMAKE_SOURCE_DIR}/source/corvusoft/${PROJECT_NAME}" )
+set( INCLUDE_DIR "${PROJECT_SOURCE_DIR}/source" )
+set( SOURCE_DIR  "${PROJECT_SOURCE_DIR}/source/corvusoft/${PROJECT_NAME}" )
 
-include( "${CMAKE_SOURCE_DIR}/cmake/configuration.cmake" )
+include( "${PROJECT_SOURCE_DIR}/cmake/configuration.cmake" )
 
 include_directories( ${INCLUDE_DIR} SYSTEM ${core_INCLUDE} ${runloop_INCLUDE} ${network_INCLUDE} )
 
@@ -45,10 +45,10 @@ set_target_properties( ${SHARED_LIBRARY_NAME} PROPERTIES SOVERSION ${PROJECT_VER
 target_link_libraries( ${SHARED_LIBRARY_NAME} )
 
 enable_testing( )
-add_subdirectory( "${CMAKE_SOURCE_DIR}/test/unit" )
-add_subdirectory( "${CMAKE_SOURCE_DIR}/test/acceptance" )
-add_subdirectory( "${CMAKE_SOURCE_DIR}/test/regression" )
-add_subdirectory( "${CMAKE_SOURCE_DIR}/test/integration" )
+add_subdirectory( "${PROJECT_SOURCE_DIR}/test/unit" )
+add_subdirectory( "${PROJECT_SOURCE_DIR}/test/acceptance" )
+add_subdirectory( "${PROJECT_SOURCE_DIR}/test/regression" )
+add_subdirectory( "${PROJECT_SOURCE_DIR}/test/integration" )
 
 #
 # Install

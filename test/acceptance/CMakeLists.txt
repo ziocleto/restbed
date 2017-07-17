@@ -1,8 +1,6 @@
-# Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+cmake_minimum_required( VERSION 3.1.0 FATAL_ERROR )
 
-project( "acceptance test suite" )
-
-cmake_minimum_required( VERSION 2.8.10 )
+project( "acceptance test suite" VERSION 5.0.0 LANGUAGES CXX )
 
 #
 # Configuration

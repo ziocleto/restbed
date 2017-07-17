@@ -133,10 +133,10 @@ endif ( )
 
 install( DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/example" DESTINATION ${EXAMPLE_INSTALL_DIR} FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
 
-install( DIRECTORY "${CMAKE_SOURCE_DIR}/example/https_client/resource/certificates" DESTINATION ${RESOURCE_INSTALL_DIR} FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+install( DIRECTORY "${PROJECT_SOURCE_DIR}/example/https_client/resource/certificates" DESTINATION ${RESOURCE_INSTALL_DIR} FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
 
-install( FILES "${CMAKE_SOURCE_DIR}/example/compression/resource/data.zlib" DESTINATION ${RESOURCE_INSTALL_DIR} )
-install( FILES "${CMAKE_SOURCE_DIR}/example/serving_html/resource/index.html" DESTINATION ${RESOURCE_INSTALL_DIR} )
-install( FILES "${CMAKE_SOURCE_DIR}/example/web_socket/resource/web_socket.html" DESTINATION ${RESOURCE_INSTALL_DIR} )
-install( FILES "${CMAKE_SOURCE_DIR}/example/server_sent_events/resource/server_sent_events.html" DESTINATION ${RESOURCE_INSTALL_DIR} )
-install( FILES "${CMAKE_SOURCE_DIR}/example/transfer_encoding_request/resource/request.txt" DESTINATION ${RESOURCE_INSTALL_DIR} )
+install( FILES "${PROJECT_SOURCE_DIR}/example/compression/resource/data.zlib" DESTINATION ${RESOURCE_INSTALL_DIR} )
+install( FILES "${PROJECT_SOURCE_DIR}/example/serving_html/resource/index.html" DESTINATION ${RESOURCE_INSTALL_DIR} )
+install( FILES "${PROJECT_SOURCE_DIR}/example/web_socket/resource/web_socket.html" DESTINATION ${RESOURCE_INSTALL_DIR} )
+install( FILES "${PROJECT_SOURCE_DIR}/example/server_sent_events/resource/server_sent_events.html" DESTINATION ${RESOURCE_INSTALL_DIR} )
+install( FILES "${PROJECT_SOURCE_DIR}/example/transfer_encoding_request/resource/request.txt" DESTINATION ${RESOURCE_INSTALL_DIR} )
