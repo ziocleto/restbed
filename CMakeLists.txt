@@ -6,7 +6,7 @@ message( "Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved." )
 #
 # Dependencies
 #
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules" )
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake" )
 
 find_package( core    REQUIRED )
 find_package( runloop REQUIRED )
@@ -16,11 +16,30 @@ find_package( catch   REQUIRED )
 #
 # Configuration
 #
+set( CMAKE_CXX_STANDARD 14 )
 set( CMAKE_INSTALL_LIBDIR "library" )
 set( INCLUDE_DIR "${PROJECT_SOURCE_DIR}/source" )
 set( SOURCE_DIR  "${PROJECT_SOURCE_DIR}/source/corvusoft/${PROJECT_NAME}" )
 
-include( "${PROJECT_SOURCE_DIR}/cmake/configuration.cmake" )
+if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
+    set( CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/distribution" CACHE PATH "Install path prefix" FORCE )
+endif ( )
+
+if( ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_WIN32_WINNT=0x0601 /W4 /wd4068 /wd4702" )
+endif ( )
+
+if( NOT WIN32 )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Weffc++ -pedantic -Wno-unknown-pragmas" )
+endif ( )
+
+if ( UNIX AND NOT APPLE )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
+endif ( )
+
+if ( APPLE )
+    set( CMAKE_MACOSX_RPATH ON )
+endif ( )
 
 include_directories( ${INCLUDE_DIR} SYSTEM ${core_INCLUDE} ${runloop_INCLUDE} ${network_INCLUDE} )
 

@@ -1,6 +1,3 @@
-[submodule "dependency/network"]
-	path = dependency/network
-	url = http://github.com/corvusoft/network
 [submodule "dependency/protocol"]
 	path = dependency/protocol
-	url = https://github.com/corvusoft/protocol
+	url = http://github.com/corvusoft/protocol
