@@ -8,10 +8,11 @@ message( "Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved." )
 #
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake" )
 
-find_package( core    REQUIRED )
-find_package( runloop REQUIRED )
-find_package( network REQUIRED )
-find_package( catch   REQUIRED )
+find_package( core     REQUIRED )
+find_package( catch    REQUIRED )
+find_package( runloop  REQUIRED )
+find_package( network  REQUIRED )
+find_package( protocol REQUIRED )
 
 #
 # Configuration
