@@ -16,11 +16,9 @@
 #include "corvusoft/restbed/detail/service_impl.hpp"
 
 //External Includes
-#include <corvusoft/core/error.hpp>
-#include <corvusoft/core/logger.hpp>
 #include <corvusoft/core/run_loop.hpp>
-#include <corvusoft/network/socket.hpp>
-#include <corvusoft/network/tcpip_socket.hpp>
+#include <corvusoft/network/adaptor.hpp>
+#include <corvusoft/network/tcpip_adaptor.hpp> //why not just call it tcpip.hpp?
 #include <corvusoft/protocol/http.hpp>
 #include <corvusoft/protocol/protocol.hpp>
 
@@ -45,13 +43,11 @@ using std::chrono::duration_cast;
 using corvusoft::restbed::detail::ServiceImpl;
 
 //External Namespaces
-using corvusoft::core::Logger;
 using corvusoft::core::RunLoop;
-using corvusoft::core::success;
-using corvusoft::network::Socket;
-using corvusoft::network::TCPIPSocket;
+using corvusoft::network::Adaptor;
+using corvusoft::network::TCPIPAdaptor; //rename TCPIP
 using corvusoft::protocol::Protocol;
-using corvusoft::protocol::HTTProtocol;
+using corvusoft::protocol::HTTP;
 
 namespace corvusoft
 {
@@ -71,7 +67,7 @@ namespace corvusoft
             }
             catch ( ... )
             {
-                m_pimpl->log( "Service failed graceful retirement.", Logger::ERROR );
+                m_pimpl->log( "Service failed graceful retirement.", 1 );
             }
         }
         
@@ -131,25 +127,13 @@ namespace corvusoft
             }
             
             m_pimpl->log( "Service operations retired." );
-            
-            if ( m_pimpl->logger not_eq nullptr )
-            {
-                m_pimpl->logger->teardown( );
-            }
         }
         
         error_code Service::start( const shared_ptr< const Settings >& settings )
         {
             m_pimpl->settings = ( settings == nullptr ) ? make_shared< Settings >( ) : settings;
             
-            auto failure = m_pimpl->initialise_component( m_pimpl->logger, "Reporting initialised.", "Failed to initialise reporting." );
-            
-            if ( failure )
-            {
-                return failure;
-            }
-            
-            failure = m_pimpl->initialise_component( m_pimpl->resource_cache, "Resource cache initialised.", "Failed to initialise resource cache." );
+            auto failure = m_pimpl->initialise_component( m_pimpl->resource_cache, "Resource cache initialised.", "Failed to initialise resource cache." );
             
             if ( failure )
             {
@@ -175,7 +159,7 @@ namespace corvusoft
             
             if ( m_pimpl->protocol_layers.empty( ) )
             {
-                add_protocol_layer( make_shared< HTTProtocol >( ) );
+                add_protocol( make_shared< HTTP >( ) );
             }
             
             failure = m_pimpl->initialise_layer< Protocol >( m_pimpl->protocol_layers );
@@ -189,10 +173,10 @@ namespace corvusoft
             
             if ( m_pimpl->network_layers.empty( ) )
             {
-                add_network_layer( TCPIPSocket::create( ) );
+                add_network( TCPIPAdaptor::create( ) );
             }
             
-            failure = m_pimpl->initialise_layer< Socket >( m_pimpl->network_layers );
+            failure = m_pimpl->initialise_layer< Adaptor >( m_pimpl->network_layers );
             
             if ( failure )
             {
@@ -201,24 +185,24 @@ namespace corvusoft
             
             for ( const auto& layer : m_pimpl->network_layers )
             {
-                layer->set_open_handler( [ this, layer ]( const shared_ptr< Socket > )
+                layer->set_open_handler( [ this, layer ]( const shared_ptr< Adaptor > )
                 {
                     m_pimpl->log( " " + layer->get_name( ) + " network layer enabled via " + layer->get_local_endpoint( ) );
                 } );
-                layer->set_error_handler( [ this, layer ]( const shared_ptr< Socket >, const error_code code )
+                layer->set_error_handler( [ this, layer ]( const shared_ptr< Adaptor >, const error_code code )
                 {
-                    m_pimpl->error( code, layer->get_name( ) + " network layer failed at " + layer->get_local_endpoint( ), core::Logger::Severity::FATAL );
+                    m_pimpl->error( code, layer->get_name( ) + " network layer failed at " + layer->get_local_endpoint( ), 2 );
                     stop( );
                 } );
-                layer->listen( m_pimpl->settings, m_pimpl->acceptor );
+                //layer->listen( m_pimpl->settings, m_pimpl->acceptor );
             }
             
             m_pimpl->uptime = steady_clock::now( );
-            m_pimpl->runloop->enqueue( [ this ]( auto code )
-            {
-                m_pimpl->ready_handler( );
-                return code;
-            } );
+            //m_pimpl->runloop->enqueue( [ this ]( auto code )
+            //{
+            //    m_pimpl->ready_handler( );
+            //    return code;
+            //} );
             return m_pimpl->runloop->start( );
         }
         
@@ -236,19 +220,19 @@ namespace corvusoft
             
             m_pimpl->resources.emplace_back( resource );
             
-            auto& middleware_layers = resource->get_middleware_layers( );
+            auto& middleware_layers = resource->get_middleware( );
             
-            if ( not middleware_layers.empty( ) )
-            {
-                middleware_layers.back( )->set_continue_handler( m_pimpl->execute );
-            }
+            // if ( not middleware_layers.empty( ) )
+            //{
+            //    middleware_layers.back( )->set_success_handler( m_pimpl->execute );
+            //}
             
-            for ( auto& middleware : middleware_layers )
-            {
-                middleware->set_terminate_handler( m_pimpl->terminate );
-            }
+            //for ( auto& middleware : middleware_layers )
+            //{
+            //    middleware->set_terminate_handler( m_pimpl->terminate );
+            //}
             
-            return success;
+            return error_code( );
         }
         
         error_code Service::suppress( const shared_ptr< const Resource >& resource )
@@ -266,7 +250,7 @@ namespace corvusoft
             auto position = find( m_pimpl->resources.begin( ), m_pimpl->resources.end( ), resource );
             m_pimpl->resources.erase( position );
             
-            return success;
+            return error_code( );
         }
         
         const seconds Service::get_uptime( void ) const
@@ -291,7 +275,7 @@ namespace corvusoft
             return m_pimpl->runloop;
         }
         
-        error_code Service::add_network_layer( const shared_ptr< Socket >& value )
+        error_code Service::add_network( const shared_ptr< Adaptor >& value )
         {
             if ( is_up( ) and not is_suspended( ) )
             {
@@ -303,10 +287,10 @@ namespace corvusoft
                 m_pimpl->network_layers.emplace_back( value );
             }
             
-            return success;
+            return error_code( );
         }
         
-        error_code Service::add_protocol_layer( const shared_ptr< Protocol >& value )
+        error_code Service::add_protocol( const shared_ptr< Protocol >& value )
         {
             if ( is_up( ) and not is_suspended( ) )
             {
@@ -318,10 +302,10 @@ namespace corvusoft
                 m_pimpl->protocol_layers.emplace_back( value );
             }
             
-            return success;
+            return error_code( );
         }
         
-        error_code Service::add_middleware_layer( const shared_ptr< Middleware >& value )
+        error_code Service::add_middleware( const shared_ptr< Middleware >& value )
         {
             if ( is_up( ) and not is_suspended( ) )
             {
@@ -330,24 +314,24 @@ namespace corvusoft
             
             if ( value == nullptr )
             {
-                return success;
+                return error_code( );
             }
             
-            if ( m_pimpl->middleware_layers.empty( ) )
-            {
-                value->set_continue_handler( m_pimpl->cache );
-            }
-            else
-            {
-                auto& middleware = m_pimpl->middleware_layers.back( );
-                middleware->set_continue_handler( bind( &Middleware::process, value, _1 ) );
-                value->set_continue_handler( m_pimpl->cache );
-            }
+            //if ( m_pimpl->middleware_layers.empty( ) )
+            //{
+            //value->set_success_handler( m_pimpl->cache );
+            //}
+            //else
+            //{
+            //auto& middleware = m_pimpl->middleware_layers.back( );
+            //middleware->set_success_handler( bind( &Middleware::process, value, _1 ) );
+            //value->set_success_handler( m_pimpl->cache );
+            //}
             
-            value->set_terminate_handler( m_pimpl->terminate );
-            m_pimpl->middleware_layers.emplace_back( value );
+            //value->set_terminate_handler( m_pimpl->terminate );
+            //m_pimpl->middleware_layers.emplace_back( value );
             
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_default_header( const string& name, const string& value )
@@ -361,7 +345,7 @@ namespace corvusoft
             m_pimpl->dynamic_default_headers.erase( name );
             add_default_header( name, value );
             
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_default_header( const string& name, const function< string ( void ) >& value )
@@ -379,7 +363,7 @@ namespace corvusoft
                 add_default_header( name, value );
             }
             
-            return success;
+            return error_code( );
         }
         
         error_code Service::add_default_header( const string& name, const string& value )
@@ -390,7 +374,7 @@ namespace corvusoft
             }
             
             m_pimpl->default_headers.emplace( name, value );
-            return success;
+            return error_code( );
         }
         
         error_code Service::add_default_header( const string& name, const function< string ( void ) >& value )
@@ -405,18 +389,18 @@ namespace corvusoft
                 m_pimpl->dynamic_default_headers.emplace( name, value );
             }
             
-            return success;
+            return error_code( );
         }
         
-        error_code Service::set_logger( const shared_ptr< Logger >& value )
+        error_code Service::set_log_handler( const function< void ( const int, const string ) >& value )
         {
             if ( is_up( ) and not is_suspended( ) )
             {
                 return make_error_code( std::errc::operation_in_progress );
             }
             
-            m_pimpl->logger = value;
-            return success;
+            m_pimpl->log_handler = value;
+            return error_code( );
         }
         
         error_code Service::set_resource_cache( const shared_ptr< ResourceCache >& value )
@@ -427,7 +411,7 @@ namespace corvusoft
             }
             
             m_pimpl->resource_cache = value;
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_session_manager( const shared_ptr< SessionManager >& value )
@@ -438,7 +422,7 @@ namespace corvusoft
             }
             
             m_pimpl->session_manager = value;
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_error_handler( const function< void ( const error_code ) >& value )
@@ -449,7 +433,7 @@ namespace corvusoft
             }
             
             m_pimpl->error_handler = value;
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_ready_handler( const function< void ( void ) >& value )
@@ -460,17 +444,17 @@ namespace corvusoft
             }
             
             m_pimpl->ready_handler = value;
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_signal_handler( const int signal, const function< void ( void ) >& value )
         {
-            m_pimpl->runloop->enqueue_when( signal, [ value ]( auto code )
-            {
-                value( );
-                return code;
-            } );
-            return success;
+            //m_pimpl->runloop->enqueue_when( signal, [ value ]( auto code )
+            //{
+            //    value( );
+            //    return code;
+            //} );
+            return error_code( );
         }
         
         error_code Service::set_resource_not_found_handler( const function< void ( const shared_ptr< Session > ) >& value )
@@ -481,7 +465,7 @@ namespace corvusoft
             }
             
             m_pimpl->resource_not_found_handler = value;
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_method_not_allowed_handler( const function< void ( const shared_ptr< Session > ) >& value )
@@ -492,7 +476,7 @@ namespace corvusoft
             }
             
             m_pimpl->method_not_allowed_handler = value;
-            return success;
+            return error_code( );
         }
         
         error_code Service::set_method_not_implemented_handler( const function< void ( const shared_ptr< Session > ) >& value )
@@ -503,7 +487,7 @@ namespace corvusoft
             }
             
             m_pimpl->method_not_implemented_handler = value;
-            return success;
+            return error_code( );
         }
     }
 }

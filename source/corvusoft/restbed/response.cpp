@@ -5,8 +5,8 @@
 //System Includes
 
 //Project Includes
+#include "corvusoft/restbed/status.hpp"
 #include "corvusoft/restbed/response.hpp"
-#include "corvusoft/restbed/status_message.hpp"
 
 //External Includes
 
@@ -59,44 +59,44 @@ namespace corvusoft
         
         void Response::set_version( const double value )
         {
-            set_property( "version", value );
+            //set( "version", value );
         }
         
         void Response::set_status_code( const int value )
         {
-            set_property( "status:code", value );
-            set_status_message( make_status_message( value ) );
+            //set( "status:code", value );
+            //set_status_message( make_status_message( value ) );
         }
         
         void Response::set_protocol( const string& value )
         {
-            set_property( "protocol", value );
+            //set( "protocol", value );
         }
         
         void Response::set_status_message( const string& value )
         {
-            set_property( "status:message", value );
+            //set( "status:message", value );
         }
         
         void Response::set_body( const string& value )
         {
-            set_property( "body", make_bytes( value ) );
+            //set( "body", make_bytes( value ) );
         }
         
         void Response::set_body( const Bytes& value )
         {
-            set_property( "body", value );
+            //set( "body", value );
         }
         
         void Response::set_header( const string& name, const string& value )
         {
-            erase( "header:" + name );
-            add_header( name, value );
+            //erase( "header:" + name );
+            //add_header( name, value );
         }
         
         void Response::add_header( const string& name, const string& value )
         {
-            set_property( "header:" + name, value );
+            //set( "header:" + name, value );
         }
     }
 }

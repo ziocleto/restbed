@@ -17,19 +17,17 @@
 #include <system_error>
 
 //Project Includes
+#include <corvusoft/restbed/status.hpp>
 #include <corvusoft/restbed/session.hpp>
 #include <corvusoft/restbed/request.hpp>
 #include <corvusoft/restbed/resource.hpp>
 #include <corvusoft/restbed/settings.hpp>
 #include <corvusoft/restbed/middleware.hpp>
-#include <corvusoft/restbed/status_code.hpp>
 #include <corvusoft/restbed/resource_cache.hpp>
 #include <corvusoft/restbed/session_manager.hpp>
 
 //External Includes
-#include <corvusoft/core/error.hpp>
-#include <corvusoft/core/logger.hpp>
-#include <corvusoft/network/socket.hpp>
+#include <corvusoft/network/adaptor.hpp>
 #include <corvusoft/protocol/protocol.hpp>
 
 //System Namespaces
@@ -61,7 +59,7 @@ namespace corvusoft
             
             struct ServiceImpl
             {
-                std::shared_ptr< core::Logger > logger = nullptr;
+                std::function< void ( const int, const std::string ) > log_handler = nullptr;
                 
                 std::shared_ptr< core::RunLoop > runloop = nullptr;
                 
@@ -77,7 +75,7 @@ namespace corvusoft
                 
                 std::vector< std::shared_ptr< Middleware > > middleware_layers { };
                 
-                std::vector< std::shared_ptr< network::Socket > > network_layers { };
+                std::vector< std::shared_ptr< network::Adaptor > > network_layers { };
                 
                 std::vector< std::shared_ptr< protocol::Protocol > > protocol_layers { };
                 
@@ -95,349 +93,349 @@ namespace corvusoft
                 
                 std::function< void ( const std::shared_ptr< Session > ) > method_not_implemented_handler = nullptr;
                 
-                std::vector< std::shared_ptr< network::Socket > > sockets { }; //make sure to delete on destroy/timeout.
+                std::vector< std::shared_ptr< network::Adaptor > > adaptors { }; //make sure to delete on destroy/timeout.
                 
-                const std::function< std::error_code ( const std::shared_ptr< network::Socket > ) > acceptor = [ this ]( auto socket )
+                const std::function< std::error_code ( const std::shared_ptr< network::Adaptor > ) > acceptor = [ this ]( auto adaptor )
                 {
-                    assert( socket not_eq nullptr );
+                    assert( adaptor not_eq nullptr );
                     
-                    //socket->set_open_handler( load );
-                    socket->set_message_handler( load );
-                    //socket->set_close_handler( std::bind( Protocol::close_handler, protocol ) ); //session->unload( ); sockets.erase( );
-                    //socket->set_error_handler( std::bind( Protocol::error_handler, protocol ) );
-                    sockets.push_back( socket );
+                    //adaptor->set_open_handler( load );
+                    adaptor->set_message_handler( load );
+                    //adaptor->set_close_handler( std::bind( Protocol::close_handler, protocol ) ); //session->unload( ); adaptors.erase( );
+                    //adaptor->set_error_handler( std::bind( Protocol::error_handler, protocol ) );
+                    adaptors.push_back( adaptor );
                     
-                    return core::success;
+                    return std::error_code( );
                 };
                 
-                const std::function< void ( const std::shared_ptr< network::Socket > ) > load = [ this ]( auto socket )
+                const std::function< void ( const std::shared_ptr< network::Adaptor > ) > load = [ this ]( auto adaptor )
                 {
-                    assert( socket not_eq nullptr );
+                    // assert( adaptor not_eq nullptr );
                     
-                    std::shared_ptr< protocol::Protocol > protocol = load_protocol( socket );
+                    // std::shared_ptr< protocol::Protocol > protocol = load_protocol( adaptor );
                     
-                    if ( protocol == nullptr )
-                        return error( std::make_error_code( std::errc::protocol_not_supported ),
-                                      "Failed to locate appropriate protocol layer, terminating socket connection." );
-                                      
-                    auto session = Session::create( socket, protocol, logger );
+                    // if ( protocol == nullptr )
+                    //     return error( std::make_error_code( std::errc::protocol_not_supported ),
+                    //                   "Failed to locate appropriate protocol layer, terminating adaptor connection." );
                     
-                    if ( session_manager == nullptr )
-                    {
-                        parse( socket, session );
-                    }
-                    else
-                    {
-                        const auto parse_wrapper = [ this ]( auto session )
-                        {
-                            parse( session->get_socket( ), session );
-                        };
-                        session_manager->load( session, parse_wrapper, terminate );
-                    }
+                    // auto session = Session::create( adaptor, protocol );
                     
-                    socket->set_message_handler( std::bind( parse, std::placeholders::_1, session ) );
+                    // if ( session_manager == nullptr )
+                    // {
+                    //     parse( adaptor, session );
+                    // }
+                    // else
+                    // {
+                    //     const auto parse_wrapper = [ this ]( auto session )
+                    //     {
+                    //         parse( session->get_adaptor( ), session );
+                    //     };
+                    //     session_manager->load( session, parse_wrapper, terminate );
+                    // }
+                    
+                    // adaptor->set_message_handler( std::bind( parse, std::placeholders::_1, session ) );
                 };
                 
-                const std::function< void ( const std::shared_ptr< network::Socket >, const std::shared_ptr< Session > ) > parse = [ this ]( auto socket, auto session )
+                const std::function< void ( const std::shared_ptr< network::Adaptor >, const std::shared_ptr< Session > ) > parse = [ this ]( auto adaptor, auto session )
                 {
-                    assert( socket not_eq nullptr );
-                    assert( session not_eq nullptr );
+                    // assert( adaptor not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    auto protocol = session->get_protocol( );
-                    assert( protocol not_eq nullptr );
+                    // auto protocol = session->get_protocol( );
+                    // assert( protocol not_eq nullptr );
                     
-                    auto message = std::make_shared< Request >( ); //we need to set the port of the request.
-                    auto failure = protocol->parse( socket, message );
+                    // auto message = std::make_shared< Request >( ); //we need to set the port of the request.
+                    // auto failure = protocol->parse( adaptor, message );
                     
-                    if ( failure )
-                    {
-                        error( failure, "Protocol failed to parse request." );
-                        return;
-                    }
+                    // if ( failure )
+                    // {
+                    //     error( failure, "Protocol failed to parse request." );
+                    //     return;
+                    // }
                     
-                    session->set_request( message );
+                    // session->set_request( message );
                     
-                    if ( middleware_layers.empty( ) )
-                    {
-                        cache( session );
-                    }
-                    else
-                    {
-                        middleware_layers.front( )->process( session );
-                    }
+                    // if ( middleware_layers.empty( ) )
+                    // {
+                    //     cache( session );
+                    // }
+                    // else
+                    // {
+                    //     middleware_layers.front( )->process( session );
+                    // }
                 };
                 
                 const std::function< void ( const std::shared_ptr< Session > ) > cache = [ this ]( auto session )
                 {
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    if ( resource_cache == nullptr )
-                    {
-                        route( session );
-                    }
-                    else
-                    {
-                        resource_cache->load( session, route, terminate );
-                    }
+                    // if ( resource_cache == nullptr )
+                    // {
+                    //     route( session );
+                    // }
+                    // else
+                    // {
+                    //     resource_cache->load( session, route, terminate );
+                    // }
                 };
                 
                 const std::function< void ( const std::shared_ptr< Session > ) > route = [ this ]( auto session )
                 {
                     //force dev to supply bot the /resource and /resource/ paths if they want them.
                     //this allows you to have different behaviour for /resource and /resource/ if you wnat.
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    auto request = session->get_request( );
-                    assert( request not_eq nullptr );
+                    // auto request = session->get_request( );
+                    // assert( request not_eq nullptr );
                     
-                    auto path = request->get_path( );
-                    auto root = settings->get_root( );
+                    // auto path = request->get_path( );
+                    // auto root = settings->get_root( );
                     
-                    if ( not root.empty( ) )
-                    {
-                        if ( path.find( root ) not_eq std::string::npos )
-                        {
-                            path.erase( 0, root.length( ) );
-                        }
-                        else
-                        {
-                            return resource_not_found( session );
-                        }
-                    }
+                    // if ( not root.empty( ) )
+                    // {
+                    //     if ( path.find( root ) not_eq std::string::npos )
+                    //     {
+                    //         path.erase( 0, root.length( ) );
+                    //     }
+                    //     else
+                    //     {
+                    //         return resource_not_found( session );
+                    //     }
+                    // }
                     
-                    size_t position = path.find( "//" );
+                    // size_t position = path.find( "//" );
                     
-                    while ( position not_eq std::string::npos )
-                    {
-                        path.replace( position, 2, "/" );
-                        position++;
-                    }
+                    // while ( position not_eq std::string::npos )
+                    // {
+                    //     path.replace( position, 2, "/" );
+                    //     position++;
+                    // }
                     
-                    std::shared_ptr< const Resource > resource = nullptr;
+                    // std::shared_ptr< const Resource > resource = nullptr;
                     
-                    for ( const auto& asset : resources )
-                        if ( *asset == path )
-                        {
-                            resource = asset;
-                            break;
-                        }
-                        
-                    if ( resource == nullptr )
-                    {
-                        return resource_not_found( session );
-                    }
+                    // for ( const auto& asset : resources )
+                    //     if ( *asset == path )
+                    //     {
+                    //         resource = asset;
+                    //         break;
+                    //     }
                     
-                    session->set_resource( resource );
+                    // if ( resource == nullptr )
+                    // {
+                    //     return resource_not_found( session );
+                    // }
                     
-                    auto& middleware_layers = resource->get_middleware_layers( );
+                    // session->set_resource( resource );
                     
-                    if ( middleware_layers.empty( ) )
-                    {
-                        execute( session );
-                    }
-                    else
-                    {
-                        middleware_layers.front( )->process( session );
-                    }
+                    // auto& middleware_layers = resource->get_middleware_layers( );
+                    
+                    // if ( middleware_layers.empty( ) )
+                    // {
+                    //     execute( session );
+                    // }
+                    // else
+                    // {
+                    //     middleware_layers.front( )->process( session );
+                    // }
                 };
                 
                 const std::function< void ( const std::shared_ptr< Session > ) > execute = [ this ]( auto session )
                 {
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    auto request = session->get_request( );
-                    assert( request not_eq nullptr );
+                    // auto request = session->get_request( );
+                    // assert( request not_eq nullptr );
                     
-                    auto resource = session->get_resource( );
-                    assert( resource not_eq nullptr );
+                    // auto resource = session->get_resource( );
+                    // assert( resource not_eq nullptr );
                     
-                    auto handler = resource->get_method_handler( request->get_method( ) );
+                    // auto handler = resource->get_method_handler( request->get_method( ) );
                     
-                    ( handler not_eq nullptr ) ? handler( session ) : method_not_found( session );
+                    // ( handler not_eq nullptr ) ? handler( session ) : method_not_found( session );
                 };
                 
                 const std::function< void ( const std::shared_ptr< Session >, std::error_code ) > terminate = [ this ]( auto session, auto code )
                 {
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    if ( code or session == nullptr )
-                    {
-                        return;
-                    }
+                    // if ( code or session == nullptr )
+                    // {
+                    //     return;
+                    // }
                     
                     return;
                 };
                 
                 void resource_not_found( const std::shared_ptr< Session > session )
                 {
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    if ( resource_not_found_handler not_eq nullptr )
-                    {
-                        return resource_not_found_handler( session );
-                    }
+                    // if ( resource_not_found_handler not_eq nullptr )
+                    // {
+                    //     return resource_not_found_handler( session );
+                    // }
                     
-                    make_response( NOT_FOUND, session );
+                    // make_response( NOT_FOUND, session );
                 }
                 
                 void method_not_found( const std::shared_ptr< Session > session )
                 {
-                    assert( session  not_eq nullptr );
+                    // assert( session  not_eq nullptr );
                     
-                    const auto& request = session->get_request( );
-                    const auto method = request->get_method( );
+                    // const auto& request = session->get_request( );
+                    // const auto method = request->get_method( );
                     
-                    bool method_supported = false;
+                    // bool method_supported = false;
                     
-                    for ( const auto& resource : resources )
-                        if ( resource->has_method_support( method ) )
-                        {
-                            method_supported = true;
-                            break;
-                        }
-                        
-                    if ( method_supported )
-                    {
-                        method_not_implemented( session );
-                    }
-                    else
-                    {
-                        method_not_allowed( session );
-                    }
+                    // for ( const auto& resource : resources )
+                    //     if ( resource->has_method_support( method ) )
+                    //     {
+                    //         method_supported = true;
+                    //         break;
+                    //     }
+                    
+                    // if ( method_supported )
+                    // {
+                    //     method_not_implemented( session );
+                    // }
+                    // else
+                    // {
+                    //     method_not_allowed( session );
+                    // }
                 }
                 
                 void method_not_allowed( const std::shared_ptr< Session > session )
                 {
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    if ( method_not_allowed_handler not_eq nullptr )
-                    {
-                        return method_not_allowed_handler( session );
-                    }
+                    // if ( method_not_allowed_handler not_eq nullptr )
+                    // {
+                    //     return method_not_allowed_handler( session );
+                    // }
                     
-                    make_response( METHOD_NOT_ALLOWED, session );
+                    // make_response( METHOD_NOT_ALLOWED, session );
                 }
                 
                 void method_not_implemented( const std::shared_ptr< Session > session )
                 {
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    const auto resource = session->get_resource( );
-                    assert( resource not_eq nullptr );
+                    // const auto resource = session->get_resource( );
+                    // assert( resource not_eq nullptr );
                     
-                    const auto handler = resource->get_method_not_implemented_handler( );
+                    // const auto handler = resource->get_method_not_implemented_handler( );
                     
-                    if ( handler not_eq nullptr )
-                    {
-                        return handler( session );
-                    }
+                    // if ( handler not_eq nullptr )
+                    // {
+                    //     return handler( session );
+                    // }
                     
-                    if ( method_not_implemented_handler not_eq nullptr )
-                    {
-                        return method_not_implemented_handler( session );
-                    }
+                    // if ( method_not_implemented_handler not_eq nullptr )
+                    // {
+                    //     return method_not_implemented_handler( session );
+                    // }
                     
-                    make_response( NOT_IMPLEMENTED, session );
+                    // make_response( NOT_IMPLEMENTED, session );
                 }
                 
-                std::shared_ptr< protocol::Protocol > load_protocol( const std::shared_ptr< network::Socket > socket )
+                std::shared_ptr< protocol::Protocol > load_protocol( const std::shared_ptr< network::Adaptor > adaptor )
                 {
-                    static std::error_code failure { };
+                    // static std::error_code failure { };
                     
-                    for ( const auto& layer : protocol_layers )
-                    {
-                        failure = layer->accept( socket );
-                        
-                        if ( not failure )
-                        {
-                            return layer;
-                        }
-                        else if ( failure not_eq std::errc::wrong_protocol_type )
-                        {
-                            error( failure, layer->get_name( ) + " protocol layer failed during request triage." );
-                            break;
-                        }
-                    }
+                    // for ( const auto& layer : protocol_layers )
+                    // {
+                    //     failure = layer->accept( adaptor );
                     
-                    return nullptr;
+                    //     if ( not failure )
+                    //     {
+                    //         return layer;
+                    //     }
+                    //     else if ( failure not_eq std::errc::wrong_protocol_type )
+                    //     {
+                    //         error( failure, layer->get_name( ) + " protocol layer failed during request triage." );
+                    //         break;
+                    //     }
+                    // }
+                    
+                    // return nullptr;
                 }
                 
                 void make_response( const int status, const std::shared_ptr< Session > session )
                 {
-                    assert( session not_eq nullptr );
+                    // assert( session not_eq nullptr );
                     
-                    std::multimap< const std::string, const std::string > headers = default_headers;
+                    // std::multimap< const std::string, const std::string > headers = default_headers;
                     
-                    for ( const auto header : dynamic_default_headers )
-                    {
-                        headers.emplace( header.first, header.second( ) );
-                    }
+                    // for ( const auto header : dynamic_default_headers )
+                    // {
+                    //     headers.emplace( header.first, header.second( ) );
+                    // }
                     
-                    session->close( status, headers );
+                    // session->close( status, headers );
                 }
                 
-                void log( const std::string& message, const core::Logger::Severity severity = core::Logger::Severity::INFO )
+                void log( const std::string& message, const int severity = 0 )
                 {
                     std::error_code error { };
                     
-                    if ( logger not_eq nullptr )
-                    {
-                        error = logger->log_if( not message.empty( ), severity, message );
-                    }
+                    //if ( logger not_eq nullptr )
+                    //{
+                    //error = logger->log_if( not message.empty( ), severity, message );
+                    //}
                     
-                    if ( error )
-                    {
-                        fprintf( stderr, "Logger failed with '%s' when reporting: %s\n", error.message( ).data( ), message.data( ) );
-                    }
+                    //if ( error )
+                    //{
+                    //    fprintf( stderr, "Logger failed with '%s' when reporting: %s\n", error.message( ).data( ), message.data( ) );
+                    //}
                 }
                 
-                std::error_code error( const std::error_code& failure, const std::string& message, const core::Logger::Severity severity = core::Logger::Severity::ERROR )
+                std::error_code error( const std::error_code& failure, const std::string& message, const int severity = 1 )
                 {
-                    if ( error_handler not_eq nullptr )
-                    {
-                        error_handler( failure );
-                    }
+                    // if ( error_handler not_eq nullptr )
+                    // {
+                    //     error_handler( failure );
+                    // }
                     
-                    log( message, severity );
-                    log( failure.message( ), severity );
-                    return failure;
+                    // log( message, severity );
+                    // log( failure.message( ), severity );
+                    // return failure;
                 }
                 
                 template< typename Type >
                 std::error_code initialise_component( Type& component, const std::string&& success_message, const std::string&& failure_message )
                 {
-                    assert( component not_eq nullptr );
+                    // assert( component not_eq nullptr );
                     
-                    std::error_code failure = component->setup( runloop, settings );
+                    // std::error_code failure = component->setup( runloop, settings );
                     
-                    if ( failure )
-                    {
-                        error( failure, failure_message );
-                    }
-                    else
-                    {
-                        log( success_message );
-                    }
+                    // if ( failure )
+                    // {
+                    //     error( failure, failure_message );
+                    // }
+                    // else
+                    // {
+                    //     log( success_message );
+                    // }
                     
-                    return failure;
+                    // return failure;
                 }
                 
                 template< typename Type, typename Arg >
                 std::error_code initialise_layer( Arg& layers )
                 {
-                    std::error_code failure { };
+                    // std::error_code failure { };
                     
-                    for ( const auto& layer : layers )
-                    {
-                        failure = initialise_component( layer, " " + layer->get_name( ) + " layer initialised.", "Failed to initialise " + layer->get_name( ) + " layer." );
-                        
-                        if ( failure )
-                        {
-                            return failure;
-                        }
-                    }
+                    // for ( const auto& layer : layers )
+                    // {
+                    //     failure = initialise_component( layer, " " + layer->get_name( ) + " layer initialised.", "Failed to initialise " + layer->get_name( ) + " layer." );
                     
-                    return failure;
+                    //     if ( failure )
+                    //     {
+                    //         return failure;
+                    //     }
+                    // }
+                    
+                    // return failure;
                 }
             };
         }

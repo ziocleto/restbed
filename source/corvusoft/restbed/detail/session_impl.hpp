@@ -15,7 +15,7 @@
 #include "corvusoft/restbed/session_data.hpp"
 
 //External Includes
-#include <corvusoft/network/socket.hpp>
+#include <corvusoft/network/adaptor.hpp>
 
 //System Namespaces
 
@@ -28,13 +28,7 @@ namespace corvusoft
     //Forward Declarations
     namespace core
     {
-        class Logger;
         class RunLoop;
-    }
-    
-    namespace network
-    {
-        class Socket;
     }
     
     namespace protocol
@@ -60,11 +54,11 @@ namespace corvusoft
                 
                 std::shared_ptr< const Resource > resource = nullptr;
                 
-                std::shared_ptr< core::Logger > logger = nullptr;
+                std::function< void ( const int, const std::string ) > log_handler = nullptr;
                 
                 std::shared_ptr< core::RunLoop > runloop = nullptr;
                 
-                std::shared_ptr< network::Socket > socket = nullptr;
+                std::shared_ptr< network::Adaptor > adaptor = nullptr;
                 
                 std::shared_ptr< protocol::Protocol > protocol = nullptr;
                 
@@ -72,10 +66,10 @@ namespace corvusoft
                 
                 std::multimap< const std::string, const std::function< std::string ( void ) > > dynamic_default_headers { };
                 
-                const std::function< void ( const std::shared_ptr< Session > session, const std::shared_ptr< network::Socket > socket, const std::function< void ( const std::shared_ptr< Session > ) > success ) > success_wrapper = [ ]( auto session, auto socket, auto success )
+                const std::function< void ( const std::shared_ptr< Session > session, const std::shared_ptr< network::Adaptor > socket, const std::function< void ( const std::shared_ptr< Session > ) > success ) > success_wrapper = [ ]( auto session, auto adaptor, auto success )
                 {
-                    assert( socket not_eq nullptr );
-                    socket->close( );
+                    assert( adaptor not_eq nullptr );
+                    adaptor->close( );
                     
                     if ( success not_eq nullptr )
                     {

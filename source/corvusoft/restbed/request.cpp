@@ -26,7 +26,7 @@ namespace corvusoft
 {
     namespace restbed
     {
-        Request::Request( void ) : Message( )
+        Request::Request( void ) : protocol::Message( )
         {
             return;
         }
@@ -38,147 +38,146 @@ namespace corvusoft
         
         bool Request::has_header( const string& name ) const
         {
-            return has( "request:header:" + name );
+            //return has( "request:header:" + name );
         }
         
         bool Request::has_path_parameter( const string& name ) const
         {
-            return has( "request:parameter:" + name );
+            //return has( "request:parameter:" + name );
         }
         
         bool Request::has_query_parameter( const string& name ) const
         {
-            return has( "request:query:" + name );
+            //return has( "request:query:" + name );
         }
         
         double Request::get_version( void ) const
         {
-            double default_value = 0;
-            return get( "request:version", default_value );
+            //double default_value = 0;
+            //return get( "request:version", default_value );
         }
         
         uint16_t Request::get_port( void ) const
         {
-            uint16_t default_value = 0;
-            return get( "request:port", default_value );
+            //uint16_t default_value = 0;
+            //return get( "request:port", default_value );
         }
         
         const Bytes Request::get_body( void ) const
         {
-            static const Bytes default_value { };
-            return get( "request:body", default_value );
+            return get( "request:body", core::make_bytes( ) );
         }
         
         string Request::get_host( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get( "request:host" );
-            return ( transform == nullptr ) ? value : transform( value );
+            //const string value = get( "request:host" );
+            //return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_path( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get( "request:path" );
-            return ( transform == nullptr ) ? value : transform( value );
+            //const string value = get( "request:path" );
+            //return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_method( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get( "request:method" );
-            return ( transform == nullptr ) ? value : transform( value );
+            //const string value = get( "request:method" );
+            //return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_protocol( const function< string ( const string& ) >& transform ) const
         {
-            const string value = get( "request:protocol" );
-            return ( transform == nullptr ) ? value : transform( value );
+            //const string value = get( "request:protocol" );
+            //return ( transform == nullptr ) ? value : transform( value );
         }
         
         string Request::get_header( const string& name, const string& default_value ) const
         {
-            return get( "request:header:" + name, default_value );
+            //return get( "request:header:" + name, default_value );
         }
         
         string Request::get_header( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get( "request:header:" + name );
-            return ( transform == nullptr ) ? value : transform( value );
+            //const string value = get( "request:header:" + name );
+            //return ( transform == nullptr ) ? value : transform( value );
         }
         
         multimap< string, string > Request::get_headers( const string& ) const
         {
             multimap< string, string > headers { };
             
-            for ( const auto& header : get_string_properties( ) )
-            {
-                auto name = header.first;
-                const auto position = name.find( "request:header:" );
-                
-                if ( position not_eq string::npos )
-                {
-                    name.erase( 0, 15 );
-                    headers.emplace( name, header.second );
-                }
-            }
+            // for ( const auto& header : get_string_properties( ) )
+            // {
+            //     auto name = header.first;
+            //     const auto position = name.find( "request:header:" );
+            
+            //     if ( position not_eq string::npos )
+            //     {
+            //         name.erase( 0, 15 );
+            //         headers.emplace( name, header.second );
+            //     }
+            // }
             
             return headers;
         }
         
         string Request::get_query_parameter( const string& name, const string& default_value ) const
         {
-            return get( "request:query:" + name, default_value );
+            //return get( "request:query:" + name, default_value );
         }
         
         string Request::get_query_parameter( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get( "request:query:" + name );
-            return ( transform == nullptr ) ? value : transform( value );
+            //const string value = get( "request:query:" + name );
+            //return ( transform == nullptr ) ? value : transform( value );
         }
         
         multimap< string, string > Request::get_query_parameters( const string& ) const
         {
             multimap< string, string > parameters { };
             
-            for ( const auto& parameter : get_string_properties( ) )
-            {
-                auto name = parameter.first;
-                const auto position = name.find( "request:query:" );
-                
-                if ( position not_eq string::npos )
-                {
-                    name.erase( 0, 6 );
-                    parameters.emplace( name, parameter.second );
-                }
-            }
+            // for ( const auto& parameter : get_string_properties( ) )
+            // {
+            //     auto name = parameter.first;
+            //     const auto position = name.find( "request:query:" );
+            
+            //     if ( position not_eq string::npos )
+            //     {
+            //         name.erase( 0, 6 );
+            //         parameters.emplace( name, parameter.second );
+            //     }
+            // }
             
             return parameters;
         }
         
         string Request::get_path_parameter( const string& name, const string& default_value ) const
         {
-            return get( "request:parameter" + name, default_value );
+            //return get( "request:parameter" + name, default_value );
         }
         
         string Request::get_path_parameter( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get( "request:parameter:" + name );
-            return ( transform == nullptr ) ? value : transform( value );
+            //const string value = get( "request:parameter:" + name );
+            //return ( transform == nullptr ) ? value : transform( value );
         }
         
         map< string, string > Request::get_path_parameters( const string& ) const
         {
             map< string, string > parameters { };
             
-            for ( const auto& parameter : get_string_properties( ) )
-            {
-                auto name = parameter.first;
-                const auto position = name.find( "request:parameter:" );
-                
-                if ( position not_eq string::npos )
-                {
-                    name.erase( 0, 18 );
-                    parameters.emplace( name, parameter.second );
-                }
-            }
+            // for ( const auto& parameter : get_string_properties( ) )
+            // {
+            //     auto name = parameter.first;
+            //     const auto position = name.find( "request:parameter:" );
+            
+            //     if ( position not_eq string::npos )
+            //     {
+            //         name.erase( 0, 18 );
+            //         parameters.emplace( name, parameter.second );
+            //     }
+            // }
             
             return parameters;
         }

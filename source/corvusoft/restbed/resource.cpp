@@ -38,7 +38,7 @@ namespace corvusoft
     {
         Resource::Resource( const string& path ) : m_pimpl( new ResourceImpl )
         {
-            add_path( path );
+            set_path( path );
         }
         
         Resource::Resource( const set< string >& paths ) : m_pimpl( new ResourceImpl )
@@ -51,14 +51,14 @@ namespace corvusoft
             return;
         }
         
-        const method_handler_t Resource::get_method_handler( const string& method ) const
+        const Resource::method_handler_t Resource::get_method_handler( const string& method ) const
         {
             return ( m_pimpl->method_handlers.count( method ) ) ? //method case?
                    m_pimpl->method_handlers.at( method ) :
                    m_pimpl->method_not_implemented_handler;
         }
         
-        const vector< shared_ptr< Middleware > >& Resource::get_middleware( void ) const
+        const vector< shared_ptr< Middleware > > Resource::get_middleware( void ) const
         {
             return m_pimpl->middleware;
         }
@@ -135,12 +135,12 @@ namespace corvusoft
             m_pimpl->dynamic_default_headers.emplace( name, value );
         }
         
-        void Resource::set_method_handler( const string& method, method_handler_t& callback )
+        void Resource::set_method_handler( const string& method, const Resource::method_handler_t& callback )
         {
             m_pimpl->method_handlers.emplace( method, callback );
         }
         
-        void Resource::set_method_not_implemented_handler( const function< void ( const shared_ptr< Session > ) >& value )
+        void Resource::set_method_not_implemented_handler( const Resource::method_handler_t& value )
         {
             m_pimpl->method_not_implemented_handler = value;
         }

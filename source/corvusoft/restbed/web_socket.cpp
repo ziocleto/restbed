@@ -9,10 +9,8 @@
 #include "corvusoft/restbed/session.hpp"
 #include "corvusoft/restbed/web_socket.hpp"
 #include "corvusoft/restbed/detail/web_socket_impl.hpp"
-#include "corvusoft/restbed/web_socket_operation_code.hpp"
 
 //External Includes
-#include "corvusoft/core/logger.hpp"
 
 //System Namespaces
 using std::function;
@@ -24,7 +22,6 @@ using corvusoft::restbed::detail::WebSocketImpl;
 
 //External Namespaces
 using corvusoft::core::Bytes;
-using corvusoft::core::Logger;
 
 namespace corvusoft
 {
@@ -43,12 +40,12 @@ namespace corvusoft
             }
             catch ( ... )
             {
-                auto logger = m_pimpl->session->get_logger( );
+                // auto logger = m_pimpl->session->get_logger( );
                 
-                if ( logger not_eq nullptr )
-                {
-                    logger->log( Logger::WARNING, "WebSocket failed graceful retirement." );
-                }
+                // if ( logger not_eq nullptr )
+                // {
+                //     logger->log( Logger::WARNING, "WebSocket failed graceful retirement." );
+                // }
             }
         }
         

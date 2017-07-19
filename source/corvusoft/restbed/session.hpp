@@ -34,7 +34,7 @@ namespace corvusoft
     
     namespace network
     {
-        class Socket;
+        class Adaptor;
     }
     
     namespace protocol
@@ -65,7 +65,7 @@ namespace corvusoft
                 virtual ~Session( void );
                 
                 //Functionality
-                static std::shared_ptr< Session > create( const std::shared_ptr< network::Socket >& socket,
+                static std::shared_ptr< Session > create( const std::shared_ptr< network::Adaptor >& socket,
                         const std::shared_ptr< protocol::Protocol >& protocol );
                 bool is_open( void ) const;
                 
@@ -167,7 +167,7 @@ namespace corvusoft
                 
                 const std::shared_ptr< core::RunLoop > get_runloop( void ) const;
                 
-                const std::shared_ptr< network::Socket > get_socket( void ) const;
+                const std::shared_ptr< network::Adaptor > get_adaptor( void ) const;
                 
                 const std::shared_ptr< protocol::Protocol > get_protocol( void ) const;
                 
@@ -213,7 +213,7 @@ namespace corvusoft
                 
                 Session( const Session& original ) = delete;
                 
-                Session( const std::shared_ptr< network::Socket >& socket,
+                Session( const std::shared_ptr< network::Adaptor >& socket,
                          const std::shared_ptr< protocol::Protocol >& protocol  );
                          
                 //Functionality

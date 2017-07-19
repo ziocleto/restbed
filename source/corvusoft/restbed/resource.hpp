@@ -30,6 +30,7 @@ namespace corvusoft
     namespace restbed
     {
         //Forward Declarations
+        class Request;
         class Session;
         class Settings;
         class Middleware;
@@ -45,7 +46,7 @@ namespace corvusoft
                 //Friends
                 
                 //Definitions
-                typedef method_handler_t std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Request > ) >;
+                typedef std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > method_handler_t;
                 
                 //Constructors
                 Resource( const std::string& path = "" );
@@ -82,7 +83,7 @@ namespace corvusoft
                 
                 void set_method_handler( const std::string& method, const method_handler_t& handler );
                 
-                void set_method_not_implemented_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
+                void set_method_not_implemented_handler( const method_handler_t& value );
                 
                 void set_error_handler( const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) >& value );
                 

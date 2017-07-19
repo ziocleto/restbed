@@ -28,13 +28,12 @@ namespace corvusoft
     //Forward Declarations
     namespace core
     {
-        class Logger;
         class RunLoop;
     }
     
     namespace network
     {
-        class Socket;
+        class Adaptor;
     }
     
     namespace protocol
@@ -98,7 +97,7 @@ namespace corvusoft
                 //Setters
                 std::error_code add_middleware( const std::shared_ptr< Middleware >& value );
                 
-                std::error_code add_network( const std::shared_ptr< network::Socket >& value );
+                std::error_code add_network( const std::shared_ptr< network::Adaptor >& value );
                 
                 std::error_code add_protocol( const std::shared_ptr< protocol::Protocol >& value );
                 
@@ -110,7 +109,7 @@ namespace corvusoft
                 
                 std::error_code add_default_header( const std::string& name, const std::function< std::string ( void ) >& value );
                 
-                std::error_code set_log_handler( const std::shared_ptr< core::Logger >& value );
+                std::error_code set_log_handler( const std::function< void ( const int, const std::string ) >& value );
                 
                 std::error_code set_resource_cache( const std::shared_ptr< ResourceCache >& value );
                 

@@ -45,17 +45,17 @@ namespace corvusoft
                 
                 std::set< std::string > paths { };
                 
-                std::vector< std::shared_ptr< Middleware > > middleware_layers { };
+                std::vector< std::shared_ptr< Middleware > > middleware { };
                 
                 std::multimap< const std::string, const std::string > default_headers { };
                 
                 std::multimap< const std::string, const std::function< std::string ( void ) > > dynamic_default_headers { };
                 
-                std::function< void ( const std::shared_ptr< Session > ) > method_not_implemented_handler = nullptr;
+                std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > method_not_implemented_handler = nullptr;
                 
                 std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > error_handler = nullptr;
                 
-                std::map< const std::string, const std::function< void ( const std::shared_ptr< Session > ) > > method_handlers { };
+                std::map< const std::string, const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > > method_handlers { };
                 
                 bool compare( const std::string& lhs, const std::string& rhs ) const
                 {

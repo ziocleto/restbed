@@ -14,7 +14,7 @@
 
 //External Includes
 #include <corvusoft/core/run_loop.hpp>
-#include <corvusoft/network/socket.hpp>
+#include <corvusoft/network/adaptor.hpp>
 #include <corvusoft/protocol/message.hpp>
 #include <corvusoft/protocol/protocol.hpp>
 
@@ -35,7 +35,7 @@ using corvusoft::restbed::detail::SessionImpl;
 using corvusoft::core::Bytes;
 using corvusoft::core::make_bytes;
 using corvusoft::core::RunLoop;
-using corvusoft::network::Socket;
+using corvusoft::network::Adaptor;
 using corvusoft::protocol::Message;
 using corvusoft::protocol::Protocol;
 
@@ -43,9 +43,9 @@ namespace corvusoft
 {
     namespace restbed
     {
-        shared_ptr< Session > Session::create( const shared_ptr< Socket >& socket, const shared_ptr< Protocol >& protocol )
+        shared_ptr< Session > Session::create( const shared_ptr< Adaptor >& adaptor, const shared_ptr< Protocol >& protocol )
         {
-            return shared_ptr< Session >( new Session( socket, protocol ) );
+            return shared_ptr< Session >( new Session( adaptor, protocol ) );
         }
         
         Session::~Session( void )
@@ -60,12 +60,12 @@ namespace corvusoft
         
         bool Session::is_closed( void ) const
         {
-            return m_pimpl->socket not_eq nullptr and m_pimpl->socket->is_closed( );
+            return true;//m_pimpl->adaptor not_eq nullptr and m_pimpl->adaptor->is_closed( );
         }
         
         void Session::close( const shared_ptr< Response >& response, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
         {
-            yield( response, bind( m_pimpl->success_wrapper, _1, m_pimpl->socket, success ), failure );
+            yield( response, bind( m_pimpl->success_wrapper, _1, m_pimpl->adaptor, success ), failure );
         }
         
         void Session::close( const string body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
@@ -75,11 +75,11 @@ namespace corvusoft
         
         void Session::close( const core::Bytes body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
         {
-            assert( m_pimpl->socket not_eq nullptr );
+            assert( m_pimpl->adaptor not_eq nullptr );
             assert( m_pimpl->protocol not_eq nullptr );
             
             error_code error;
-            m_pimpl->socket->produce( body, error );
+            m_pimpl->adaptor->produce( body, error );
             
             if ( not error and success not_eq nullptr )
             {
@@ -108,39 +108,39 @@ namespace corvusoft
         
         void Session::yield( const shared_ptr< Response >& response, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
         {
-            assert( m_pimpl->socket not_eq nullptr );
-            assert( m_pimpl->protocol not_eq nullptr );
+            // assert( m_pimpl->adaptor not_eq nullptr );
+            // assert( m_pimpl->protocol not_eq nullptr );
             
-            if ( not response->has_property( "status:code" ) )
-            {
-                response->set_property( "status:code", "200" );
-            }
+            // if ( not response->has_property( "status:code" ) )
+            // {
+            //     response->set_property( "status:code", "200" );
+            // }
             
-            if ( not response->has_property( "status:message" ) )
-            {
-                response->set_property( "status:message", "OK" );
-            }
+            // if ( not response->has_property( "status:message" ) )
+            // {
+            //     response->set_property( "status:message", "OK" );
+            // }
             
-            if ( not response->has_property( "version" ) )
-            {
-                response->set_property( "version", m_pimpl->request->get_property( "version" ) );
-            }
+            // if ( not response->has_property( "version" ) )
+            // {
+            //     response->set_property( "version", m_pimpl->request->get_property( "version" ) );
+            // }
             
-            if ( not response->has_property( "protocol" ) )
-            {
-                response->set_property( "protocol", m_pimpl->request->get_property( "protocol" ) );
-            }
+            // if ( not response->has_property( "protocol" ) )
+            // {
+            //     response->set_property( "protocol", m_pimpl->request->get_property( "protocol" ) );
+            // }
             
-            const auto error = m_pimpl->protocol->compose( m_pimpl->socket, response );
+            // const auto error = m_pimpl->protocol->compose( m_pimpl->adaptor, response );
             
-            if ( not error and success not_eq nullptr )
-            {
-                success( shared_from_this( ) );
-            }
-            else if ( failure not_eq nullptr )
-            {
-                failure( shared_from_this( ), error );
-            }
+            // if ( not error and success not_eq nullptr )
+            // {
+            //     success( shared_from_this( ) );
+            // }
+            // else if ( failure not_eq nullptr )
+            // {
+            //     failure( shared_from_this( ), error );
+            // }
         }
         
         void Session::yield( const string body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
@@ -150,11 +150,11 @@ namespace corvusoft
         
         void Session::yield( const core::Bytes body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
         {
-            assert( m_pimpl->socket not_eq nullptr );
+            assert( m_pimpl->adaptor not_eq nullptr );
             assert( m_pimpl->protocol not_eq nullptr );
             
             error_code error;
-            m_pimpl->socket->produce( body, error );
+            m_pimpl->adaptor->produce( body, error );
             
             if ( not error and success not_eq nullptr )
             {
@@ -193,7 +193,7 @@ namespace corvusoft
         
         void Session::upgrade( const shared_ptr< Response >& response, const function< void ( const shared_ptr< WebSocket > ) >& success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
         {
-            //build websocket.
+            //build webadaptor.
             //yield response
         }
         
@@ -214,22 +214,22 @@ namespace corvusoft
         
         const string Session::get_origin( void ) const
         {
-            if ( m_pimpl->socket == nullptr )
+            if ( m_pimpl->adaptor == nullptr )
             {
                 return "";
             }
             
-            return m_pimpl->socket->get_remote_endpoint( );
+            return m_pimpl->adaptor->get_remote_endpoint( );
         }
         
         const string Session::get_destination( void ) const
         {
-            if ( m_pimpl->socket == nullptr )
+            if ( m_pimpl->adaptor == nullptr )
             {
                 return "";
             }
             
-            return m_pimpl->socket->get_local_endpoint( );
+            return m_pimpl->adaptor->get_local_endpoint( );
         }
         
         const shared_ptr< SessionData > Session::get_data( void ) const
@@ -237,9 +237,9 @@ namespace corvusoft
             return m_pimpl->data;
         }
         
-        const shared_ptr< Socket > Session::get_socket( void ) const
+        const shared_ptr< Adaptor > Session::get_adaptor( void ) const
         {
-            return m_pimpl->socket;
+            return m_pimpl->adaptor;
         }
         
         const shared_ptr< Protocol > Session::get_protocol( void ) const
@@ -281,12 +281,12 @@ namespace corvusoft
             m_pimpl->dynamic_default_headers.emplace( name, value );
         }
         
-        Session::Session( const shared_ptr< Socket >& socket, const shared_ptr< Protocol >& protocol ) : m_pimpl( new SessionImpl )
+        Session::Session( const shared_ptr< Adaptor >& adaptor, const shared_ptr< Protocol >& protocol ) : m_pimpl( new SessionImpl )
         {
-            assert( socket not_eq nullptr );
+            assert( adaptor not_eq nullptr );
             assert( protocol not_eq nullptr );
             
-            m_pimpl->socket = socket;
+            m_pimpl->adaptor = adaptor;
             m_pimpl->protocol = protocol;
         }
     }

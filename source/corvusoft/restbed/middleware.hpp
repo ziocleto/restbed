@@ -33,6 +33,7 @@ namespace corvusoft
     {
         //Forward Declarations
         class Session;
+        class Response;
         
         class Middleware
         {
