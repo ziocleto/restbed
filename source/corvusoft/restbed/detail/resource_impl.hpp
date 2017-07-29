@@ -10,8 +10,8 @@
 #include <set>
 #include <vector>
 #include <string>
-#include <cassert>
 #include <cstring>
+#include <algorithm>
 #include <functional>
 
 //Project Includes
@@ -43,33 +43,30 @@ namespace corvusoft
             {
                 bool case_sensitivity = false;
                 
-                std::set< std::string > paths { };
+                std::set< const std::string > paths { };
                 
-                std::vector< std::shared_ptr< Middleware > > middleware { };
+                std::vector< const std::shared_ptr< Middleware > > middleware { };
                 
                 std::multimap< const std::string, const std::string > default_headers { };
                 
                 std::multimap< const std::string, const std::function< std::string ( void ) > > dynamic_default_headers { };
                 
-                std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > method_not_implemented_handler = nullptr;
-                
                 std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > error_handler = nullptr;
+                
+                std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > method_not_implemented_handler = nullptr;
                 
                 std::map< const std::string, const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > > method_handlers { };
                 
                 bool compare( const std::string& lhs, const std::string& rhs ) const
                 {
-                    assert( not lhs.empty( ) );
-                    assert( not rhs.empty( ) );
-                    
-                    if ( case_sensitivity )
-                    {
-                        return strcasecmp( lhs.c_str( ), rhs.c_str( ) ) == 0;
-                    }
-                    else
-                    {
-                        return lhs == rhs;
-                    }
+                    return ( case_sensitivity ) ? strcasecmp( lhs.c_str( ), rhs.c_str( ) ) == 0 : lhs == rhs;
+                }
+                
+                static std::string uppercase( const std::string& value )
+                {
+                    std::string result { };
+                    std::transform( value.begin( ), value.end( ), result.begin( ), ::toupper );
+                    return result;
                 }
             };
         }

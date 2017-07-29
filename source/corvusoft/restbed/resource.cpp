@@ -3,11 +3,6 @@
  */
 
 //System Includes
-#include <string>
-#include <vector>
-#include <memory>
-#include <cassert>
-#include <system_error>
 
 //Project Includes
 #include "corvusoft/restbed/session.hpp"
@@ -25,7 +20,6 @@ using std::multimap;
 using std::function;
 using std::shared_ptr;
 using std::error_code;
-using std::placeholders::_1;
 
 //Project Namespaces
 using corvusoft::restbed::detail::ResourceImpl;
@@ -41,9 +35,9 @@ namespace corvusoft
             set_path( path );
         }
         
-        Resource::Resource( const set< string >& paths ) : m_pimpl( new ResourceImpl )
+        Resource::Resource( const set< const string >& paths ) : m_pimpl( new ResourceImpl )
         {
-            m_pimpl->paths = paths;
+            m_pimpl->paths.insert( paths.begin( ), paths.end( ) );
         }
         
         Resource::~Resource( void )
@@ -53,12 +47,11 @@ namespace corvusoft
         
         const Resource::method_handler_t Resource::get_method_handler( const string& method ) const
         {
-            return ( m_pimpl->method_handlers.count( method ) ) ? //method case?
-                   m_pimpl->method_handlers.at( method ) :
-                   m_pimpl->method_not_implemented_handler;
+            const auto verb = ResourceImpl::uppercase( method );
+            return ( m_pimpl->method_handlers.count( verb ) ) ? m_pimpl->method_handlers.at( verb ) : m_pimpl->method_not_implemented_handler;
         }
         
-        const vector< shared_ptr< Middleware > > Resource::get_middleware( void ) const
+        const vector< const shared_ptr< Middleware > > Resource::get_middleware( void ) const
         {
             return m_pimpl->middleware;
         }
@@ -81,9 +74,9 @@ namespace corvusoft
             m_pimpl->paths.emplace( value );
         }
         
-        void Resource::set_path( const set< string >& values )
+        void Resource::set_path( const set< const string >& values )
         {
-            m_pimpl->paths = values;
+            m_pimpl->paths.insert( values.begin( ), values.end( ) );
         }
         
         void Resource::set_path_case_sensitivity( const bool value )
@@ -137,7 +130,12 @@ namespace corvusoft
         
         void Resource::set_method_handler( const string& method, const Resource::method_handler_t& callback )
         {
-            m_pimpl->method_handlers.emplace( method, callback );
+            if ( callback == nullptr )
+            {
+                return;
+            }
+            
+            m_pimpl->method_handlers.emplace( ResourceImpl::uppercase( method ), callback );
         }
         
         void Resource::set_method_not_implemented_handler( const Resource::method_handler_t& value )

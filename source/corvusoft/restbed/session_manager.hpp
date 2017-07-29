@@ -46,8 +46,8 @@ namespace corvusoft
                 //Functionality
                 virtual std::error_code teardown( void ) noexcept = 0;
                 
-                virtual std::error_code setup( const std::shared_ptr< core::RunLoop >& runloop,
-                                               const std::shared_ptr< const core::Settings >& settings ) noexcept = 0;
+                virtual std::error_code setup( const std::shared_ptr< core::RunLoop > runloop,
+                                               const std::shared_ptr< const core::Settings > settings ) noexcept = 0;
                                                
                 virtual void load( const std::shared_ptr< Session > session,
                                    const std::function< void ( const std::shared_ptr< Session > ) >& success,

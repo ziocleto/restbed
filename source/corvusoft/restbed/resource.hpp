@@ -10,6 +10,7 @@
 #include <set>
 #include <vector>
 #include <string>
+#include <memory>
 #include <functional>
 #include <system_error>
 
@@ -32,7 +33,6 @@ namespace corvusoft
         //Forward Declarations
         class Request;
         class Session;
-        class Settings;
         class Middleware;
         
         namespace detail
@@ -51,7 +51,7 @@ namespace corvusoft
                 //Constructors
                 Resource( const std::string& path = "" );
                 
-                Resource( const std::set< std::string >& paths );
+                Resource( const std::set< const std::string >& paths );
                 
                 virtual ~Resource( void );
                 
@@ -60,14 +60,14 @@ namespace corvusoft
                 //Getters
                 const method_handler_t get_method_handler( const std::string& method ) const;
                 
-                const std::vector< std::shared_ptr< Middleware > > get_middleware( void ) const;
+                const std::vector< const std::shared_ptr< Middleware > > get_middleware( void ) const;
                 
                 const std::multimap< const std::string, const std::string > get_default_headers( void ) const;
                 
                 //Setters
                 void set_path( const std::string& value );
                 
-                void set_path( const std::set< std::string >& values );
+                void set_path( const std::set< const std::string >& values );
                 
                 void set_path_case_sensitivity( const bool value );
                 
@@ -88,7 +88,7 @@ namespace corvusoft
                 void set_error_handler( const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) >& value );
                 
                 //Operators
-                bool operator==( const std::string& rhs ) const;
+                bool operator==( const std::string& path ) const;
                 
                 //Properties
                 

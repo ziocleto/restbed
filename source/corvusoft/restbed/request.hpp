@@ -70,7 +70,7 @@ namespace corvusoft
                 
                 std::string get_header( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
-                std::multimap< std::string, std::string > get_headers( const std::string& name = "" ) const;
+                std::multimap< const std::string, const std::string > get_headers( const std::string& name = "" ) const;
                 
                 template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
                 Type get_query_parameter( const std::string& name, const Type default_value ) const
@@ -82,7 +82,7 @@ namespace corvusoft
                 
                 std::string get_query_parameter( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
-                std::multimap< std::string, std::string > get_query_parameters( const std::string& name = "" ) const;
+                std::multimap< const std::string, const std::string > get_query_parameters( const std::string& name = "" ) const;
                 
                 template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
                 Type get_path_parameter( const std::string& name, const Type default_value ) const
@@ -94,7 +94,7 @@ namespace corvusoft
                 
                 std::string get_path_parameter( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
-                std::map< std::string, std::string > get_path_parameters( void ) const;
+                std::map< const std::string, const std::string > get_path_parameters( void ) const;
                 
                 //Setters
                 
