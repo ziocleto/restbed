@@ -19,6 +19,7 @@ using std::function;
 using std::multimap;
 
 //Project Namespaces
+using corvusoft::restbed::detail::RequestImpl;
 using corvusoft::restbed::detail::filter_fields_by_tag;
 
 //External Namespaces
@@ -57,48 +58,37 @@ namespace corvusoft
         
         double Request::get_version( void ) const
         {
-            const auto data = get( "request:version" );
-            const string value( data.begin( ), data.end( ) );
-            return stod( value );
+            return stod( RequestImpl::make_string( get( "request:version" ) ) );
         }
         
         const Bytes Request::get_body( void ) const
         {
-            return get( "request:body", core::make_bytes( ) );
+            return get( "request:body" );
         }
         
         string Request::get_host( const function< string ( const string& ) >& transform ) const
         {
-            const auto data = get( "request:host" );
-            const string value( data.begin( ), data.end( ) );
-            return ( transform == nullptr ) ? value : transform( value );
+            return RequestImpl::make_string( get( "request:host" ), transform );
         }
         
         string Request::get_path( const function< string ( const string& ) >& transform ) const
         {
-            const auto data = get( "request:path" );
-            const string value( data.begin( ), data.end( ) );
-            return ( transform == nullptr ) ? value : transform( value );
+            return RequestImpl::make_string( get( "request:path" ), transform );
         }
         
         string Request::get_method( const function< string ( const string& ) >& transform ) const
         {
-            const auto data = get( "request:method" );
-            const string value( data.begin( ), data.end( ) );
-            return ( transform == nullptr ) ? value : transform( value );
+            return RequestImpl::make_string( get( "request:method" ), transform );
         }
         
         string Request::get_protocol( const function< string ( const string& ) >& transform ) const
         {
-            const auto data = get( "request:protocol" );
-            const string value( data.begin( ), data.end( ) );
-            return ( transform == nullptr ) ? value : transform( value );
+            return RequestImpl::make_string( get( "request:protocol" ), transform );
         }
         
         string Request::get_header( const string& name, const string& default_value ) const
         {
-            const auto data = get( "request:header:" + name, make_bytes( default_value ) );
-            return string( data.begin( ), data.end( ) );
+            return RequestImpl::make_string( get( "request:header:" + name, make_bytes( default_value ) ) );
         }
         
         string Request::get_header( const string& name, const function< string ( const string& ) >& transform ) const
@@ -114,8 +104,7 @@ namespace corvusoft
         
         string Request::get_query_parameter( const string& name, const string& default_value ) const
         {
-            const auto data = get( "request:query:" + name, make_bytes( default_value ) );
-            return string( data.begin( ), data.end( ) );
+            return RequestImpl::make_string( get( "request:query:" + name, make_bytes( default_value ) ) );
         }
         
         string Request::get_query_parameter( const string& name, const function< string ( const string& ) >& transform ) const
@@ -131,8 +120,7 @@ namespace corvusoft
         
         string Request::get_path_parameter( const string& name, const string& default_value ) const
         {
-            const auto data = get( "request:parameter:" + name, make_bytes( default_value ) );
-            return string( data.begin( ), data.end( ) );
+            return RequestImpl::make_string( get( "request:parameter:" + name, make_bytes( default_value ) ) );
         }
         
         string Request::get_path_parameter( const string& name, const function< string ( const string& ) >& transform ) const

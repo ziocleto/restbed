@@ -8,6 +8,7 @@
 //System Includes
 #include <map>
 #include <string>
+#include <functional>
 
 //Project Includes
 
@@ -31,6 +32,15 @@ namespace corvusoft
         namespace detail
         {
             //Forward Declarations
+            
+            struct RequestImpl
+            {
+                static std::string make_string( const core::Bytes& data, const std::function< std::string ( const std::string& ) >& transform = nullptr )
+                {
+                    const std::string value( data.begin( ), data.end( ) );
+                    return ( transform == nullptr ) ? value : transform( value );
+                }
+            };
             
             template< typename Type >
             Type filter_fields_by_tag( const std::string& tag, const std::multimap< std::string, core::Bytes >& fields )
