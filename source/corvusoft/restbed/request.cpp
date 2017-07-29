@@ -90,9 +90,9 @@ namespace corvusoft
             return RequestImpl::make_string( get( "request:header:" + name ), transform );
         }
         
-        multimap< string, string > Request::get_headers( const string& ) const
+        multimap< string, string > Request::get_headers( const string& name ) const
         {
-            return filter_fields_by_tag< multimap< string, string > >( "request:header:", get( ) );
+            return filter_fields_by_tag< multimap< string, string > >( "request:header:" + name, get( ) );
         }
         
         string Request::get_query_parameter( const string& name, const string& default_value ) const
@@ -105,9 +105,9 @@ namespace corvusoft
             return RequestImpl::make_string( get( "request:query:" + name ), transform );
         }
         
-        multimap< string, string > Request::get_query_parameters( const string& ) const
+        multimap< string, string > Request::get_query_parameters( const string& name ) const
         {
-            return filter_fields_by_tag< multimap< string, string > >( "request:query:", get( ) );
+            return filter_fields_by_tag< multimap< string, string > >( "request:query:" + name, get( ) );
         }
         
         string Request::get_path_parameter( const string& name, const string& default_value ) const
@@ -120,7 +120,7 @@ namespace corvusoft
             return RequestImpl::make_string( get( "request:parameter:" + name ), transform );
         }
         
-        map< string, string > Request::get_path_parameters( const string& ) const
+        map< string, string > Request::get_path_parameters( ) const
         {
             return filter_fields_by_tag< map< string, string > >( "request:parameter:", get( ) );
         }

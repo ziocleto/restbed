@@ -94,7 +94,7 @@ namespace corvusoft
                 
                 std::string get_path_parameter( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
-                std::map< std::string, std::string > get_path_parameters( const std::string& name = "" ) const;
+                std::map< std::string, std::string > get_path_parameters( void ) const;
                 
                 //Setters
                 
