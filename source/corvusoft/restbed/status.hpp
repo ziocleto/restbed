@@ -151,6 +151,36 @@ namespace corvusoft
             { NETWORK_AUTHENTICATION_REQUIRED, "Network Authentication Required" }
         };
         
+        inline bool is_informational( const int status_code )
+        {
+            return ( status_code > 100 and status_code < 199 );
+        }
+        
+        inline bool is_success( const int status_code )
+        {
+            return ( status_code > 200 and status_code < 299 );
+        }
+        
+        inline bool is_redirection( const int status_code )
+        {
+            return ( status_code > 300 and status_code < 399 );
+        }
+        
+        inline bool is_client_error( const int status_code )
+        {
+            return ( status_code > 400 and status_code < 499 );
+        }
+        
+        inline bool is_server_error( const int status_code )
+        {
+            return ( status_code > 500 and status_code < 599 );
+        }
+        
+        inline int make_status_code( const std::string& status_message )
+        {
+            //return ( status_message.count( status_code ) ) ? status_message.at( status_code ) : "";
+        }
+        
         inline std::string make_status_message( const int status_code )
         {
             return ( status_message.count( status_code ) ) ? status_message.at( status_code ) : "";
