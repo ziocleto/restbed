@@ -73,7 +73,7 @@ namespace corvusoft
                 
                 std::vector< std::shared_ptr< const Resource > > resources { };
                 
-                std::vector< std::shared_ptr< Middleware > > middleware_layers { };
+                std::vector< std::shared_ptr< Middleware > > middleware_layers { }; //use stack and just pop next one off and run.
                 
                 std::vector< std::shared_ptr< network::Adaptor > > network_layers { };
                 

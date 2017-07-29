@@ -6,6 +6,7 @@
 #define _CORVUSOFT_RESTBED_MIDDLEWARE_H 1
 
 //System Includes
+#include <string>
 #include <memory>
 #include <functional>
 #include <system_error>
@@ -33,6 +34,7 @@ namespace corvusoft
     {
         //Forward Declarations
         class Session;
+        class Request;
         class Response;
         
         class Middleware
@@ -50,10 +52,15 @@ namespace corvusoft
                 virtual std::error_code setup( const std::shared_ptr< core::RunLoop > runloop,
                                                const std::shared_ptr< const core::Settings > settings ) noexcept = 0;
                                                
-                virtual std::error_code before( const std::shared_ptr< Session > session, const std::shared_ptr< Request > ) const = 0;
-                
-                virtual std::error_code after( const std::shared_ptr< Session > session, const std::shared_ptr< Response > ) const = 0;
-                
+                virtual void hook( const std::shared_ptr< Session > session,
+                                   const std::shared_ptr< Request > request,
+                                   const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Request > ) > success,
+                                   const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Response > ) > failure ) const = 0;
+                                   
+                virtual void hook( const std::shared_ptr< Session > session,
+                                   const std::shared_ptr< Response > response,
+                                   const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Response > ) > success,
+                                   const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Response > ) > failure ) const = 0;
                 //Getters
                 
                 //Setters
