@@ -61,10 +61,8 @@ namespace corvusoft
             multimap< const string, const string > headers = m_pimpl->default_headers;
             
             for ( const auto& header : m_pimpl->dynamic_default_headers )
-            {
                 headers.emplace( header.first, header.second( ) );
-            }
-            
+                
             return headers;
         }
         
@@ -86,10 +84,7 @@ namespace corvusoft
         
         void Resource::add_middleware( const shared_ptr< Middleware >& value )
         {
-            if ( value == nullptr )
-            {
-                return;
-            }
+            if ( value == nullptr ) return;
             
             m_pimpl->middleware.emplace_back( value );
         }
@@ -103,10 +98,7 @@ namespace corvusoft
         
         void Resource::set_default_header( const string& name, const function< string ( void ) >& value )
         {
-            if ( value == nullptr )
-            {
-                return;
-            }
+            if ( value == nullptr ) return;
             
             m_pimpl->default_headers.erase( name );
             m_pimpl->dynamic_default_headers.erase( name );
@@ -120,20 +112,14 @@ namespace corvusoft
         
         void Resource::add_default_header( const string& name, const function< string ( void ) >& value )
         {
-            if ( value == nullptr )
-            {
-                return;
-            }
+            if ( value == nullptr ) return;
             
             m_pimpl->dynamic_default_headers.emplace( name, value );
         }
         
         void Resource::set_method_handler( const string& method, const Resource::method_handler_t& callback )
         {
-            if ( callback == nullptr )
-            {
-                return;
-            }
+            if ( callback == nullptr ) return;
             
             m_pimpl->method_handlers.emplace( ResourceImpl::uppercase( method ), callback );
         }
@@ -152,10 +138,8 @@ namespace corvusoft
         {
             for ( const auto& lhs : m_pimpl->paths )
                 if ( m_pimpl->compare( lhs, rhs ) )
-                {
                     return true;
-                }
-                
+                    
             return false;
         }
     }
