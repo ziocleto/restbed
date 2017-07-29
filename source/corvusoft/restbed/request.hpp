@@ -8,7 +8,6 @@
 //System Includes
 #include <map>
 #include <string>
-#include <cstdint>
 #include <functional>
 
 //Project Includes

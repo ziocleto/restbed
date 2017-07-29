@@ -6,6 +6,7 @@
 
 //Project Includes
 #include "corvusoft/restbed/request.hpp"
+#include "corvusoft/restbed/detail/request_impl.hpp"
 
 //External Includes
 
@@ -14,11 +15,11 @@ using std::map;
 using std::stoi;
 using std::stod;
 using std::string;
-using std::uint16_t;
 using std::function;
 using std::multimap;
 
 //Project Namespaces
+using corvusoft::restbed::detail::filter_fields_by_tag;
 
 //External Namespaces
 using corvusoft::core::Bytes;
@@ -108,21 +109,7 @@ namespace corvusoft
         
         multimap< string, string > Request::get_headers( const string& ) const
         {
-            multimap< string, string > headers { };
-            
-            // for ( const auto& header : get_string_properties( ) )
-            // {
-            //     auto name = header.first;
-            //     const auto position = name.find( "request:header:" );
-            
-            //     if ( position not_eq string::npos )
-            //     {
-            //         name.erase( 0, 15 );
-            //         headers.emplace( name, header.second );
-            //     }
-            // }
-            
-            return headers;
+            return filter_fields_by_tag< multimap< string, string > >( "request:header:", get( ) );
         }
         
         string Request::get_query_parameter( const string& name, const string& default_value ) const
@@ -139,21 +126,7 @@ namespace corvusoft
         
         multimap< string, string > Request::get_query_parameters( const string& ) const
         {
-            multimap< string, string > parameters { };
-            
-            // for ( const auto& parameter : get_string_properties( ) )
-            // {
-            //     auto name = parameter.first;
-            //     const auto position = name.find( "request:query:" );
-            
-            //     if ( position not_eq string::npos )
-            //     {
-            //         name.erase( 0, 6 );
-            //         parameters.emplace( name, parameter.second );
-            //     }
-            // }
-            
-            return parameters;
+            return filter_fields_by_tag< multimap< string, string > >( "request:query:", get( ) );
         }
         
         string Request::get_path_parameter( const string& name, const string& default_value ) const
@@ -170,21 +143,7 @@ namespace corvusoft
         
         map< string, string > Request::get_path_parameters( const string& ) const
         {
-            map< string, string > parameters { };
-            
-            for ( const auto& parameter : get( ) )
-            {
-                auto name = parameter.first;
-                const auto position = name.find( "request:parameter:" );
-                
-                if ( position not_eq string::npos )
-                {
-                    name.erase( 0, 18 );
-                    parameters.emplace( name, parameter.second );
-                }
-            }
-            
-            return parameters;
+            return filter_fields_by_tag< map< string, string > >( "request:parameter:", get( ) );
         }
     }
 }
