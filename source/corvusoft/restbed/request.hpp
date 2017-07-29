@@ -53,8 +53,6 @@ namespace corvusoft
                 //Getters
                 double get_version( void ) const;
                 
-                std::uint16_t get_port( void ) const;
-                
                 const core::Bytes get_body( void ) const;
                 
                 std::string get_host( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;

@@ -11,6 +11,7 @@
 
 //System Namespaces
 using std::map;
+using std::stoi;
 using std::stod;
 using std::string;
 using std::uint16_t;
@@ -58,13 +59,6 @@ namespace corvusoft
             const auto data = get( "request:version" );
             const string value( data.begin( ), data.end( ) );
             return stod( value );
-        }
-        
-        uint16_t Request::get_port( void ) const
-        {
-            const auto data = get( "request:port" );
-            const string value( data.begin( ), data.end( ) );
-            return stoi( value );
         }
         
         const Bytes Request::get_body( void ) const
@@ -178,17 +172,17 @@ namespace corvusoft
         {
             map< string, string > parameters { };
             
-            // for ( const auto& parameter : get_string_properties( ) )
-            // {
-            //     auto name = parameter.first;
-            //     const auto position = name.find( "request:parameter:" );
-            
-            //     if ( position not_eq string::npos )
-            //     {
-            //         name.erase( 0, 18 );
-            //         parameters.emplace( name, parameter.second );
-            //     }
-            // }
+            for ( const auto& parameter : get( ) )
+            {
+                auto name = parameter.first;
+                const auto position = name.find( "request:parameter:" );
+                
+                if ( position not_eq string::npos )
+                {
+                    name.erase( 0, 18 );
+                    parameters.emplace( name, parameter.second );
+                }
+            }
             
             return parameters;
         }
