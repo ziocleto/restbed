@@ -54,8 +54,6 @@ namespace corvusoft
                 
                 const core::Bytes get_body( void ) const;
                 
-                std::string get_host( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
-                
                 std::string get_path( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
                 std::string get_method( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;

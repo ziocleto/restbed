@@ -12,7 +12,6 @@
 
 //System Namespaces
 using std::map;
-using std::stoi;
 using std::stod;
 using std::string;
 using std::function;
@@ -66,11 +65,6 @@ namespace corvusoft
             return get( "request:body" );
         }
         
-        string Request::get_host( const function< string ( const string& ) >& transform ) const
-        {
-            return RequestImpl::make_string( get( "request:host" ), transform );
-        }
-        
         string Request::get_path( const function< string ( const string& ) >& transform ) const
         {
             return RequestImpl::make_string( get( "request:path" ), transform );
@@ -93,8 +87,7 @@ namespace corvusoft
         
         string Request::get_header( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_header( name );
-            return ( transform == nullptr ) ? value : transform( value );
+            return RequestImpl::make_string( get( "request:header:" + name ), transform );
         }
         
         multimap< string, string > Request::get_headers( const string& ) const
@@ -109,8 +102,7 @@ namespace corvusoft
         
         string Request::get_query_parameter( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_query_parameter( name );
-            return ( transform == nullptr ) ? value : transform( value );
+            return RequestImpl::make_string( get( "request:query:" + name ), transform );
         }
         
         multimap< string, string > Request::get_query_parameters( const string& ) const
@@ -125,8 +117,7 @@ namespace corvusoft
         
         string Request::get_path_parameter( const string& name, const function< string ( const string& ) >& transform ) const
         {
-            const string value = get_path_parameter( name );
-            return ( transform == nullptr ) ? value : transform( value );
+            return RequestImpl::make_string( get( "request:parameter:" + name ), transform );
         }
         
         map< string, string > Request::get_path_parameters( const string& ) const
