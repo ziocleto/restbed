@@ -51,15 +51,28 @@ namespace corvusoft
                 //Functionality
                 
                 //Getters
+                double get_version( void ) const;
+                
+                int get_status_code( void ) const;
+                
+                std::string get_status_message( void ) const;
+                
+                std::string get_protocol( void ) const;
+                
+                core::Bytes get_body( void ) const;
+                
+                std::string get_header( const std::string& name ) const;
+                
+                std::multimap< const std::string, const std::string > get_headers( void ) const;
                 
                 //Setters
                 void set_version( const double value );
                 
                 void set_status_code( const int value );
                 
-                void set_protocol( const std::string& protocol );
-                
                 void set_status_message( const std::string& value );
+                
+                void set_protocol( const std::string& protocol );
                 
                 void set_body( const std::string& value );
                 
@@ -67,7 +80,7 @@ namespace corvusoft
                 
                 void set_header( const std::string& name, const std::string& value );
                 
-                void add_header( const std::string& name, const std::string& value );
+                void set_headers( const std::multimap< const std::string, const std::string >& values );
                 
                 //Operators
                 

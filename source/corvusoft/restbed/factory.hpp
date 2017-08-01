@@ -47,15 +47,15 @@ namespace corvusoft
                 Factory( const std::shared_ptr< core::RunLoop > runloop );
                 
                 //Functionality
+                std::shared_ptr< Request > make_request( void );
+                
                 std::shared_ptr< Session > make_session( void );
                 
                 std::shared_ptr< Service > make_service( void );
                 
-                std::shared_ptr< Resource > make_resource( void );
-                
                 std::shared_ptr< Response > make_response( void );
                 
-                std::shared_ptr< const Request > make_request( void );
+                std::shared_ptr< Resource > make_resource( void );
                 
                 std::shared_ptr< WebSocketMessage > make_web_socket_message( void );
                 

@@ -43,6 +43,7 @@ It is an ideal approach to header validation, de/compressing data, authenticatio
 
 Note: Middleware must be thread safe and reentrant.
 Note: The order of processing is front-to-back for a request and back-to-front for a response; as shown above; the first middleware added to the service is run first for a request, last for a response.
+Note: middleware requets/respones are not const
 
 Design
 ------

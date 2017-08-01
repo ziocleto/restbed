@@ -97,6 +97,29 @@ namespace corvusoft
                 std::map< const std::string, const std::string > get_path_parameters( void ) const;
                 
                 //Setters
+                void set_version( const double value );
+                
+                void set_body( const core::Bytes& value );
+                
+                void set_body( const std::string& value );
+                
+                void set_path( const std::string& value );
+                
+                void set_method( const std::string& value );
+                
+                void set_protocol( const std::string& value );
+                
+                void set_header( const std::string& name, const std::string& value );
+                
+                void set_headers( const std::multimap< const std::string, const std::string >& values );
+                
+                void set_path_parameter( const std::string& name, const std::string& value );
+                
+                void set_path_parameters( const std::map< const std::string, const std::string >& values );
+                
+                void set_query_parameter( const std::string& name, const std::string& value );
+                
+                void set_query_parameters( const std::multimap< const std::string, const std::string >& values );
                 
                 //Operators
                 

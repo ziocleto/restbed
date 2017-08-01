@@ -71,15 +71,15 @@ namespace corvusoft
                 
                 void set_path_case_sensitivity( const bool value );
                 
-                void add_middleware( const std::shared_ptr< Middleware >& value );
+                void set_middleware( const std::shared_ptr< Middleware >& value );
+                
+                void set_middleware( const std::vector< const std::shared_ptr< Middleware > >& values );
                 
                 void set_default_header( const std::string& name, const std::string& value );
                 
                 void set_default_header( const std::string& name, const std::function< std::string ( void ) >& value );
                 
-                void add_default_header( const std::string& name, const std::string& value );
-                
-                void add_default_header( const std::string& name, const std::function< std::string ( void ) >& value );
+                void set_default_headers( const std::multimap< const std::string, const std::string >& values );
                 
                 void set_method_handler( const std::string& method, const method_handler_t& handler );
                 

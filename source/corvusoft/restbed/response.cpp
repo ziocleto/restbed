@@ -57,6 +57,41 @@ namespace corvusoft
             return;
         }
         
+        double Response::get_version( void ) const
+        {
+        
+        }
+        
+        int Response::get_status_code( void ) const
+        {
+        
+        }
+        
+        string Response::get_status_message( void ) const
+        {
+        
+        }
+        
+        string Response::get_protocol( void ) const
+        {
+        
+        }
+        
+        Bytes Response::get_body( void ) const
+        {
+        
+        }
+        
+        string Response::get_header( const string& name ) const
+        {
+        
+        }
+        
+        multimap< const string, const string > Response::get_headers( void ) const
+        {
+        
+        }
+        
         void Response::set_version( const double value )
         {
             //set( "version", value );
@@ -68,14 +103,14 @@ namespace corvusoft
             //set_status_message( make_status_message( value ) );
         }
         
-        void Response::set_protocol( const string& value )
-        {
-            //set( "protocol", value );
-        }
-        
         void Response::set_status_message( const string& value )
         {
             //set( "status:message", value );
+        }
+        
+        void Response::set_protocol( const string& value )
+        {
+            //set( "protocol", value );
         }
         
         void Response::set_body( const string& value )
@@ -94,9 +129,10 @@ namespace corvusoft
             //add_header( name, value );
         }
         
-        void Response::add_header( const string& name, const string& value )
+        void Response::set_headers( const multimap< const string, const string >& values )
         {
-            //set( "header:" + name, value );
+            //erase( "header:" + name );
+            //add_header( name, value );
         }
     }
 }

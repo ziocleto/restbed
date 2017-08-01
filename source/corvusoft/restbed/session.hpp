@@ -65,8 +65,8 @@ namespace corvusoft
                 virtual ~Session( void );
                 
                 //Functionality
-                static std::shared_ptr< Session > create( const std::shared_ptr< network::Adaptor >& socket,
-                        const std::shared_ptr< protocol::Protocol >& protocol );
+                static std::shared_ptr< Session > create( const std::shared_ptr< network::Adaptor >& socket, const std::shared_ptr< protocol::Protocol >& protocol );
+                
                 bool is_open( void ) const;
                 
                 bool is_closed( void ) const;
@@ -137,7 +137,7 @@ namespace corvusoft
                             const std::function< void ( const std::shared_ptr< Session >, const core::Bytes ) > success,
                             const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
                             
-                void upgrade( const std::shared_ptr< Response >& response,
+                void upgrade( const std::shared_ptr< Response >& response, //ref dangerous
                               const std::function< void ( const std::shared_ptr< WebSocket > ) >& success,
                               const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
                               

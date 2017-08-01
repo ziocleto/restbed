@@ -53,8 +53,8 @@ namespace corvusoft
                                                const std::shared_ptr< const core::Settings > settings ) noexcept = 0;
                                                
                 virtual void hook( const std::shared_ptr< Session > session,
-                                   const std::shared_ptr< const Request > request,
-                                   const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > success,
+                                   const std::shared_ptr< Request > request,
+                                   const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Request > ) > success,
                                    const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< Response > ) > failure ) const = 0;
                                    
                 virtual void hook( const std::shared_ptr< Session > session,

@@ -73,11 +73,11 @@ namespace corvusoft
                 
                 std::vector< std::shared_ptr< const Resource > > resources { };
                 
-                std::vector< std::shared_ptr< Middleware > > middleware_layers { }; //use stack and just pop next one off and run.
+                std::vector< std::shared_ptr< Middleware > > middleware { };
                 
-                std::vector< std::shared_ptr< network::Adaptor > > network_layers { };
+                std::vector< std::shared_ptr< network::Adaptor > > networks { };
                 
-                std::vector< std::shared_ptr< protocol::Protocol > > protocol_layers { };
+                std::vector< std::shared_ptr< protocol::Protocol > > protocols { };
                 
                 std::multimap< const std::string, const std::string > default_headers { };
                 
@@ -155,13 +155,13 @@ namespace corvusoft
                     
                     // session->set_request( message );
                     
-                    // if ( middleware_layers.empty( ) )
+                    // if ( middleware.empty( ) )
                     // {
                     //     cache( session );
                     // }
                     // else
                     // {
-                    //     middleware_layers.front( )->process( session );
+                    //     middleware.front( )->process( session );
                     // }
                 };
                 
@@ -227,15 +227,15 @@ namespace corvusoft
                     
                     // session->set_resource( resource );
                     
-                    // auto& middleware_layers = resource->get_middleware_layers( );
+                    // auto& middleware = resource->get_middleware( );
                     
-                    // if ( middleware_layers.empty( ) )
+                    // if ( middleware.empty( ) )
                     // {
                     //     execute( session );
                     // }
                     // else
                     // {
-                    //     middleware_layers.front( )->process( session );
+                    //     middleware.front( )->process( session );
                     // }
                 };
                 
@@ -342,7 +342,7 @@ namespace corvusoft
                 {
                     // static std::error_code failure { };
                     
-                    // for ( const auto& layer : protocol_layers )
+                    // for ( const auto& layer : protocol )
                     // {
                     //     failure = layer->accept( adaptor );
                     

@@ -10,6 +10,7 @@
 #include "corvusoft/restbed/service.hpp"
 #include "corvusoft/restbed/settings.hpp"
 #include "corvusoft/restbed/resource.hpp"
+#include "corvusoft/restbed/log_level.hpp"
 #include "corvusoft/restbed/middleware.hpp"
 #include "corvusoft/restbed/resource_cache.hpp"
 #include "corvusoft/restbed/session_manager.hpp"
@@ -56,7 +57,7 @@ namespace corvusoft
         Service::Service( const shared_ptr< RunLoop >& runloop ) : m_pimpl( new ServiceImpl )
         {
             m_pimpl->runloop = ( runloop not_eq nullptr ) ? runloop : make_shared< RunLoop >( );
-            m_pimpl->runloop->set_worker_limit( 1 );//for debug.
+            m_pimpl->runloop->set_worker_limit( 1 );//for debug/dev purposes.
         }
         
         Service::~Service( void )
@@ -67,7 +68,7 @@ namespace corvusoft
             }
             catch ( ... )
             {
-                m_pimpl->log( "Service failed graceful retirement.", 1 );
+                m_pimpl->log( "Service failed graceful retirement.", ERROR );
             }
         }
         
@@ -101,31 +102,16 @@ namespace corvusoft
             m_pimpl->runloop->stop( );
             m_pimpl->uptime = steady_clock::time_point::min( );
             
-            for ( auto& layer : m_pimpl->network_layers )
-            {
-                layer->teardown( );
-            }
-            
-            for ( auto& layer : m_pimpl->protocol_layers )
-            {
-                layer->teardown( );
-            }
-            
-            for ( auto& layer : m_pimpl->middleware_layers )
-            {
-                layer->teardown( );
-            }
+            for ( auto& component : m_pimpl->networks ) component->teardown( );
+            for ( auto& component : m_pimpl->protocols ) component->teardown( );
+            for ( auto& component : m_pimpl->middleware ) component->teardown( );
             
             if ( m_pimpl->session_manager not_eq nullptr )
-            {
                 m_pimpl->session_manager->teardown( );
-            }
-            
+                
             if ( m_pimpl->resource_cache not_eq nullptr )
-            {
                 m_pimpl->resource_cache->teardown( );
-            }
-            
+                
             m_pimpl->log( "Service operations retired." );
         }
         
@@ -134,56 +120,32 @@ namespace corvusoft
             m_pimpl->settings = ( settings == nullptr ) ? make_shared< Settings >( ) : settings;
             
             auto failure = m_pimpl->initialise_component( m_pimpl->resource_cache, "Resource cache initialised.", "Failed to initialise resource cache." );
-            
-            if ( failure )
-            {
-                return failure;
-            }
+            if ( failure ) return failure;
             
             failure = m_pimpl->initialise_component( m_pimpl->session_manager, "Session management initialised.", "Failed to initialise session management." );
-            
-            if ( failure )
-            {
-                return failure;
-            }
+            if ( failure ) return failure;
             
             m_pimpl->log( "Initialising middleware layers" );
-            failure = m_pimpl->initialise_layer< const Middleware >( m_pimpl->middleware_layers );
-            
-            if ( failure )
-            {
-                return failure;
-            }
+            failure = m_pimpl->initialise_layer< const Middleware >( m_pimpl->middleware );
+            if ( failure ) return failure;
             
             m_pimpl->log( "Initialising protocol layers" );
             
-            if ( m_pimpl->protocol_layers.empty( ) )
-            {
+            if ( m_pimpl->protocols.empty( ) )
                 add_protocol( make_shared< HTTP >( ) );
-            }
-            
-            failure = m_pimpl->initialise_layer< Protocol >( m_pimpl->protocol_layers );
-            
-            if ( failure )
-            {
-                return failure;
-            }
+                
+            failure = m_pimpl->initialise_layer< Protocol >( m_pimpl->protocols );
+            if ( failure ) return failure;
             
             m_pimpl->log( "Initialising network layers" );
             
-            if ( m_pimpl->network_layers.empty( ) )
-            {
+            if ( m_pimpl->networks.empty( ) )
                 add_network( TCPIPAdaptor::create( ) );
-            }
+                
+            failure = m_pimpl->initialise_layer< Adaptor >( m_pimpl->networks );
+            if ( failure ) return failure;
             
-            failure = m_pimpl->initialise_layer< Adaptor >( m_pimpl->network_layers );
-            
-            if ( failure )
-            {
-                return failure;
-            }
-            
-            for ( const auto& layer : m_pimpl->network_layers )
+            for ( const auto& layer : m_pimpl->networks )
             {
                 layer->set_open_handler( [ this, layer ]( const shared_ptr< Adaptor > )
                 {
@@ -220,14 +182,14 @@ namespace corvusoft
             
             m_pimpl->resources.emplace_back( resource );
             
-            auto& middleware_layers = resource->get_middleware( );
+            auto& middleware = resource->get_middleware( );
             
-            // if ( not middleware_layers.empty( ) )
+            // if ( not middleware.empty( ) )
             //{
-            //    middleware_layers.back( )->set_success_handler( m_pimpl->execute );
+            //    middleware.back( )->set_success_handler( m_pimpl->execute );
             //}
             
-            //for ( auto& middleware : middleware_layers )
+            //for ( auto& middleware : middleware )
             //{
             //    middleware->set_terminate_handler( m_pimpl->terminate );
             //}
@@ -262,7 +224,7 @@ namespace corvusoft
         {
             set< string > endpoints;
             
-            for ( const auto& layer : m_pimpl->network_layers )
+            for ( const auto& layer : m_pimpl->networks )
             {
                 endpoints.insert( layer->get_local_endpoint( ) );
             }
@@ -284,7 +246,7 @@ namespace corvusoft
             
             if ( value not_eq nullptr )
             {
-                m_pimpl->network_layers.emplace_back( value );
+                m_pimpl->networks.emplace_back( value );
             }
             
             return error_code( );
@@ -293,15 +255,11 @@ namespace corvusoft
         error_code Service::add_protocol( const shared_ptr< Protocol >& value )
         {
             if ( is_up( ) and not is_suspended( ) )
-            {
                 return make_error_code( std::errc::operation_in_progress );
-            }
-            
+                
             if ( value not_eq nullptr )
-            {
-                m_pimpl->protocol_layers.emplace_back( value );
-            }
-            
+                m_pimpl->protocols.emplace_back( value );
+                
             return error_code( );
         }
         
@@ -317,19 +275,19 @@ namespace corvusoft
                 return error_code( );
             }
             
-            //if ( m_pimpl->middleware_layers.empty( ) )
+            //if ( m_pimpl->middleware.empty( ) )
             //{
             //value->set_success_handler( m_pimpl->cache );
             //}
             //else
             //{
-            //auto& middleware = m_pimpl->middleware_layers.back( );
+            //auto& middleware = m_pimpl->middleware.back( );
             //middleware->set_success_handler( bind( &Middleware::process, value, _1 ) );
             //value->set_success_handler( m_pimpl->cache );
             //}
             
             //value->set_terminate_handler( m_pimpl->terminate );
-            //m_pimpl->middleware_layers.emplace_back( value );
+            //m_pimpl->middleware.emplace_back( value );
             
             return error_code( );
         }

@@ -50,7 +50,7 @@ namespace corvusoft
                 //Definitions
                 
                 //Constructors
-                WebSocket( void );
+                WebSocket( void ); //hide me for a create? we don't wont people just creating sockets.
                 
                 virtual ~WebSocket( void );
                 

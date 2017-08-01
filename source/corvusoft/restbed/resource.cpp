@@ -81,17 +81,22 @@ namespace corvusoft
             m_pimpl->case_sensitivity = value;
         }
         
-        void Resource::add_middleware( const shared_ptr< Middleware >& value )
+        void Resource::set_middleware( const shared_ptr< Middleware >& value )
         {
             if ( value == nullptr ) return;
             m_pimpl->middleware.emplace_back( value );
+        }
+        
+        void Resource::set_middleware( const vector< const shared_ptr< Middleware > >& values )
+        {
+            //m_pimpl->middleware.emplace( m_pimpl->middleware.begin( ),  values );
         }
         
         void Resource::set_default_header( const string& name, const string& value )
         {
             m_pimpl->default_headers.erase( name );
             m_pimpl->dynamic_default_headers.erase( name );
-            add_default_header( name, value );
+            m_pimpl->default_headers.emplace( name, value );
         }
         
         void Resource::set_default_header( const string& name, const function< string ( void ) >& value )
@@ -99,18 +104,12 @@ namespace corvusoft
             if ( value == nullptr ) return;
             m_pimpl->default_headers.erase( name );
             m_pimpl->dynamic_default_headers.erase( name );
-            add_default_header( name, value );
-        }
-        
-        void Resource::add_default_header( const string& name, const string& value )
-        {
-            m_pimpl->default_headers.emplace( name, value );
-        }
-        
-        void Resource::add_default_header( const string& name, const function< string ( void ) >& value )
-        {
-            if ( value == nullptr ) return;
             m_pimpl->dynamic_default_headers.emplace( name, value );
+        }
+        
+        void Resource::set_default_headers( const multimap< const string, const string >& values )
+        {
+            //m_pimpl->default_headers.emplace( m_pimpl->default_headers.begin( ), values );
         }
         
         void Resource::set_method_handler( const string& method, const Resource::method_handler_t& callback )

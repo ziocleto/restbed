@@ -124,5 +124,65 @@ namespace corvusoft
         {
             return filter_fields_by_tag< map< const string, const string > >( "request:parameter:", get( ) );
         }
+        
+        void Request::set_version( const double value )
+        {
+        
+        }
+        
+        void Request::set_body( const Bytes& value )
+        {
+        
+        }
+        
+        void Request::set_body( const string& value )
+        {
+        
+        }
+        
+        void Request::set_path( const string& value )
+        {
+        
+        }
+        
+        void Request::set_method( const string& value )
+        {
+        
+        }
+        
+        void Request::set_protocol( const string& value )
+        {
+        
+        }
+        
+        void Request::set_header( const string& name, const string& value )
+        {
+        
+        }
+        
+        void Request::set_headers( const multimap< const string, const string >& values )
+        {
+        
+        }
+        
+        void Request::set_path_parameter( const string& name, const string& value )
+        {
+        
+        }
+        
+        void Request::set_path_parameters( const map< const string, const string >& values )
+        {
+        
+        }
+        
+        void Request::set_query_parameter( const string& name, const string& value )
+        {
+        
+        }
+        
+        void Request::set_query_parameters( const multimap< const string, const string >& values )
+        {
+        
+        }
     }
 }
