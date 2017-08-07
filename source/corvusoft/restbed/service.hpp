@@ -64,7 +64,11 @@ namespace corvusoft
                 //Definitions
                 
                 //Constructors
-                Service( const std::shared_ptr< core::RunLoop >& runloop = nullptr );
+                //move complex constructors to a factory. remove nullptr default.
+                //remove runloop argument and just use set_runloop.
+                //produces clean constructors and a well known default state
+                //Service( const std::shared_ptr< core::RunLoop >& runloop = nullptr ); //ref
+                Service( void );
                 
                 virtual ~Service( void );
                 
@@ -94,7 +98,9 @@ namespace corvusoft
                 
                 const std::shared_ptr< core::RunLoop > get_runloop( void ) const;
                 
-                //Setters
+                //const std:shared_ptr< core::Settings > get_settings( void ) const; //get access to default setitngs.
+                
+                //Setters //remove error_code response!
                 std::error_code add_middleware( const std::shared_ptr< Middleware >& value );
                 
                 std::error_code add_network( const std::shared_ptr< network::Adaptor >& value );
@@ -123,7 +129,7 @@ namespace corvusoft
                 
                 std::error_code set_connection_timeout_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
                 
-                std::error_code set_resource_not_found_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
+                std::error_code set_resource_not_found_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value ); //return error_code from handler? see restless, help people void exceptions.
                 
                 std::error_code set_method_not_allowed_handler( const std::function< void ( const std::shared_ptr< Session > ) >& value );
                 

@@ -87,7 +87,7 @@ namespace corvusoft
         
         }
         
-        multimap< const string, const string > Response::get_headers( void ) const
+        multimap< string, string > Response::get_headers( void ) const
         {
         
         }
@@ -129,7 +129,7 @@ namespace corvusoft
             //add_header( name, value );
         }
         
-        void Response::set_headers( const multimap< const string, const string >& values )
+        void Response::set_headers( const multimap< string, string >& values )
         {
             //erase( "header:" + name );
             //add_header( name, value );

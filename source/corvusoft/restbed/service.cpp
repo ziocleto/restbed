@@ -4,6 +4,7 @@
 
 //System Includes
 #include <map>
+#include <ciso646>
 #include <algorithm>
 
 //Project Includes
@@ -18,10 +19,10 @@
 
 //External Includes
 #include <corvusoft/core/run_loop.hpp>
-#include <corvusoft/network/adaptor.hpp>
-#include <corvusoft/network/tcpip_adaptor.hpp> //why not just call it tcpip.hpp?
 #include <corvusoft/protocol/http.hpp>
 #include <corvusoft/protocol/protocol.hpp>
+#include <corvusoft/network/adaptor.hpp>
+#include <corvusoft/network/tcpip_adaptor.hpp> //why not just call it tcpip.hpp?
 
 //System Namespaces
 using std::set;
@@ -45,10 +46,10 @@ using corvusoft::restbed::detail::ServiceImpl;
 
 //External Namespaces
 using corvusoft::core::RunLoop;
+using corvusoft::protocol::HTTP;
+using corvusoft::protocol::Protocol;
 using corvusoft::network::Adaptor;
 using corvusoft::network::TCPIPAdaptor; //rename TCPIP
-using corvusoft::protocol::Protocol;
-using corvusoft::protocol::HTTP;
 
 namespace corvusoft
 {

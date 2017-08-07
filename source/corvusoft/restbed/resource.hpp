@@ -46,6 +46,8 @@ namespace corvusoft
                 //Friends
                 
                 //Definitions
+                //return a error_code from the method handler, it helps avoid people using exceptions.
+                //allso ditch this typedef
                 typedef std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< const Request > ) > method_handler_t;
                 
                 //Constructors

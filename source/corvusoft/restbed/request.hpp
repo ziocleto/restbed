@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <type_traits>
 
 //Project Includes
 
@@ -52,7 +53,7 @@ namespace corvusoft
                 //Getters
                 double get_version( void ) const;
                 
-                const core::Bytes get_body( void ) const;
+                core::Bytes get_body( const std::function< core::Bytes ( const core::Bytes& ) >& transform = nullptr ) const;
                 
                 std::string get_path( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
@@ -70,7 +71,7 @@ namespace corvusoft
                 
                 std::string get_header( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
-                std::multimap< const std::string, const std::string > get_headers( const std::string& name = "" ) const;
+                std::multimap< std::string, std::string > get_headers( const std::string& name = "" ) const;
                 
                 template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
                 Type get_query_parameter( const std::string& name, const Type default_value ) const
@@ -82,7 +83,7 @@ namespace corvusoft
                 
                 std::string get_query_parameter( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
-                std::multimap< const std::string, const std::string > get_query_parameters( const std::string& name = "" ) const;
+                std::multimap< std::string, std::string > get_query_parameters( const std::string& name = "" ) const;
                 
                 template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
                 Type get_path_parameter( const std::string& name, const Type default_value ) const
@@ -94,7 +95,7 @@ namespace corvusoft
                 
                 std::string get_path_parameter( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
                 
-                std::map< const std::string, const std::string > get_path_parameters( void ) const;
+                std::map< std::string, std::string > get_path_parameters( void ) const;
                 
                 //Setters
                 void set_version( const double value );
@@ -111,15 +112,15 @@ namespace corvusoft
                 
                 void set_header( const std::string& name, const std::string& value );
                 
-                void set_headers( const std::multimap< const std::string, const std::string >& values );
+                void set_headers( const std::multimap< std::string, std::string >& values );
                 
                 void set_path_parameter( const std::string& name, const std::string& value );
                 
-                void set_path_parameters( const std::map< const std::string, const std::string >& values );
+                void set_path_parameters( const std::map< std::string, std::string >& values );
                 
                 void set_query_parameter( const std::string& name, const std::string& value );
                 
-                void set_query_parameters( const std::multimap< const std::string, const std::string >& values );
+                void set_query_parameters( const std::multimap< std::string, std::string >& values );
                 
                 //Operators
                 

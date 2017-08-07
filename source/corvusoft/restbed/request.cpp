@@ -60,9 +60,9 @@ namespace corvusoft
             return stod( RequestImpl::make_string( get( "request:version" ) ) );
         }
         
-        const Bytes Request::get_body( void ) const
+        Bytes Request::get_body( const function< Bytes ( const Bytes& ) >& transform ) const
         {
-            return get( "request:body" );
+            return get( "request:body" ); //transform
         }
         
         string Request::get_path( const function< string ( const string& ) >& transform ) const
