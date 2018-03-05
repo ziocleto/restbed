@@ -53,47 +53,23 @@ namespace corvusoft
                 //Getters
                 double get_version( void ) const;
                 
-                core::Bytes get_body( const std::function< core::Bytes ( const core::Bytes& ) >& transform = nullptr ) const;
+                core::Bytes get_body( void ) const;
                 
-                std::string get_path( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
+                std::string get_path( void ) const;
                 
-                std::string get_method( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
+                std::string get_method( void ) const;
                 
-                std::string get_protocol( const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
+                std::string get_protocol( void ) const;
                 
-                template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
-                Type get_header( const std::string& name, const Type default_value ) const
-                {
-                    return default_value;
-                }
-                
-                std::string get_header( const std::string& name, const std::string& default_value ) const;
-                
-                std::string get_header( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
+                std::string get_header( const std::string& name, const std::string& default_value = "" ) const;
                 
                 std::multimap< std::string, std::string > get_headers( const std::string& name = "" ) const;
                 
-                template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
-                Type get_query_parameter( const std::string& name, const Type default_value ) const
-                {
-                    return default_value;
-                }
-                
-                std::string get_query_parameter( const std::string& name, const std::string& default_value ) const;
-                
-                std::string get_query_parameter( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
+                std::string get_query_parameter( const std::string& name, const std::string& default_value = "" ) const;
                 
                 std::multimap< std::string, std::string > get_query_parameters( const std::string& name = "" ) const;
                 
-                template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
-                Type get_path_parameter( const std::string& name, const Type default_value ) const
-                {
-                    return default_value;
-                }
-                
-                std::string get_path_parameter( const std::string& name, const std::string& default_value ) const;
-                
-                std::string get_path_parameter( const std::string& name, const std::function< std::string ( const std::string& ) >& transform = nullptr ) const;
+                std::string get_path_parameter( const std::string& name, const std::string& default_value = "" ) const;
                 
                 std::map< std::string, std::string > get_path_parameters( void ) const;
                 

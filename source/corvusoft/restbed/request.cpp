@@ -24,6 +24,7 @@ using corvusoft::restbed::detail::filter_fields_by_tag;
 //External Namespaces
 using corvusoft::core::Bytes;
 using corvusoft::core::make_bytes;
+using corvusoft::core::make_string;
 using corvusoft::protocol::Message;
 
 namespace corvusoft
@@ -57,72 +58,57 @@ namespace corvusoft
         
         double Request::get_version( void ) const
         {
-            return stod( RequestImpl::make_string( get( "request:version" ) ) );
+            return stod( make_string( get( "request:version" ) ) );
         }
         
-        Bytes Request::get_body( const function< Bytes ( const Bytes& ) >& transform ) const
+        Bytes Request::get_body( void ) const
         {
-            return get( "request:body" ); //transform
+            return get( "request:body" );
         }
         
-        string Request::get_path( const function< string ( const string& ) >& transform ) const
+        string Request::get_path( void ) const
         {
-            return RequestImpl::make_string( get( "request:path" ), transform );
+            return make_string( get( "request:path" ) );
         }
         
-        string Request::get_method( const function< string ( const string& ) >& transform ) const
+        string Request::get_method( void ) const
         {
-            return RequestImpl::make_string( get( "request:method" ), transform );
+            return make_string( get( "request:method" ) );
         }
         
-        string Request::get_protocol( const function< string ( const string& ) >& transform ) const
+        string Request::get_protocol( void ) const
         {
-            return RequestImpl::make_string( get( "request:protocol" ), transform );
+            return make_string( get( "request:protocol" ) );
         }
         
         string Request::get_header( const string& name, const string& default_value ) const
         {
-            return RequestImpl::make_string( get( "request:header:" + name, make_bytes( default_value ) ) );
+            return make_string( get( "request:header:" + name, make_bytes( default_value ) ) );
         }
         
-        string Request::get_header( const string& name, const function< string ( const string& ) >& transform ) const
+        multimap< string, string > Request::get_headers( const string& name ) const
         {
-            return RequestImpl::make_string( get( "request:header:" + name ), transform );
-        }
-        
-        multimap< const string, const string > Request::get_headers( const string& name ) const
-        {
-            return filter_fields_by_tag< multimap< const string, const string > >( "request:header:" + name, get( ) );
+            return filter_fields_by_tag< multimap< string, string > >( "request:header:" + name, get( ) );
         }
         
         string Request::get_query_parameter( const string& name, const string& default_value ) const
         {
-            return RequestImpl::make_string( get( "request:query:" + name, make_bytes( default_value ) ) );
+            return make_string( get( "request:query:" + name, make_bytes( default_value ) ) );
         }
         
-        string Request::get_query_parameter( const string& name, const function< string ( const string& ) >& transform ) const
+        multimap< string, string > Request::get_query_parameters( const string& name ) const
         {
-            return RequestImpl::make_string( get( "request:query:" + name ), transform );
-        }
-        
-        multimap< const string, const string > Request::get_query_parameters( const string& name ) const
-        {
-            return filter_fields_by_tag< multimap< const string, const string > >( "request:query:" + name, get( ) );
+            return filter_fields_by_tag< multimap< string, string > >( "request:query:" + name, get( ) );
         }
         
         string Request::get_path_parameter( const string& name, const string& default_value ) const
         {
-            return RequestImpl::make_string( get( "request:parameter:" + name, make_bytes( default_value ) ) );
+            return make_string( get( "request:parameter:" + name, make_bytes( default_value ) ) );
         }
         
-        string Request::get_path_parameter( const string& name, const function< string ( const string& ) >& transform ) const
+        map< string, string > Request::get_path_parameters( ) const
         {
-            return RequestImpl::make_string( get( "request:parameter:" + name ), transform );
-        }
-        
-        map< const string, const string > Request::get_path_parameters( ) const
-        {
-            return filter_fields_by_tag< map< const string, const string > >( "request:parameter:", get( ) );
+            return filter_fields_by_tag< map< string, string > >( "request:parameter:", get( ) );
         }
         
         void Request::set_version( const double value )
@@ -160,7 +146,7 @@ namespace corvusoft
         
         }
         
-        void Request::set_headers( const multimap< const string, const string >& values )
+        void Request::set_headers( const multimap< string, string >& values )
         {
         
         }
@@ -170,7 +156,7 @@ namespace corvusoft
         
         }
         
-        void Request::set_path_parameters( const map< const string, const string >& values )
+        void Request::set_path_parameters( const map< string, string >& values )
         {
         
         }
@@ -180,7 +166,7 @@ namespace corvusoft
         
         }
         
-        void Request::set_query_parameters( const multimap< const string, const string >& values )
+        void Request::set_query_parameters( const multimap< string, string >& values )
         {
         
         }

@@ -101,7 +101,7 @@ namespace corvusoft
         
         void Resource::set_default_header( const string& name, const function< string ( void ) >& value )
         {
-            if ( value == nullptr ) return;
+            if ( value == nullptr ) return;//on null hard set empty string like restless!
             m_pimpl->default_headers.erase( name );
             m_pimpl->dynamic_default_headers.erase( name );
             m_pimpl->dynamic_default_headers.emplace( name, value );

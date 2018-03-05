@@ -11,7 +11,6 @@
 #include "corvusoft/restbed/service.hpp"
 #include "corvusoft/restbed/settings.hpp"
 #include "corvusoft/restbed/resource.hpp"
-#include "corvusoft/restbed/log_level.hpp"
 #include "corvusoft/restbed/middleware.hpp"
 #include "corvusoft/restbed/resource_cache.hpp"
 #include "corvusoft/restbed/session_manager.hpp"
@@ -19,6 +18,7 @@
 
 //External Includes
 #include <corvusoft/core/run_loop.hpp>
+#include <corvusoft/core/log_level.hpp>
 #include <corvusoft/protocol/http.hpp>
 #include <corvusoft/protocol/protocol.hpp>
 #include <corvusoft/network/adaptor.hpp>
@@ -45,6 +45,7 @@ using std::chrono::duration_cast;
 using corvusoft::restbed::detail::ServiceImpl;
 
 //External Namespaces
+using corvusoft::core::ERROR;
 using corvusoft::core::RunLoop;
 using corvusoft::protocol::HTTP;
 using corvusoft::protocol::Protocol;
@@ -55,10 +56,9 @@ namespace corvusoft
 {
     namespace restbed
     {
-        Service::Service( const shared_ptr< RunLoop >& runloop ) : m_pimpl( new ServiceImpl )
+        Service::Service( void ) : m_pimpl( new ServiceImpl )
         {
-            m_pimpl->runloop = ( runloop not_eq nullptr ) ? runloop : make_shared< RunLoop >( );
-            m_pimpl->runloop->set_worker_limit( 1 );//for debug/dev purposes.
+            return;
         }
         
         Service::~Service( void )
@@ -317,7 +317,7 @@ namespace corvusoft
             m_pimpl->default_headers.erase( name );
             m_pimpl->dynamic_default_headers.erase( name );
             
-            if ( value not_eq nullptr )
+            if ( value not_eq nullptr ) //on null hard set empty string like restless!
             {
                 add_default_header( name, value );
             }
@@ -343,7 +343,7 @@ namespace corvusoft
                 return make_error_code( std::errc::operation_in_progress );
             }
             
-            if ( value not_eq nullptr )
+            if ( value not_eq nullptr )//on null hard set empty string like restless!
             {
                 m_pimpl->dynamic_default_headers.emplace( name, value );
             }

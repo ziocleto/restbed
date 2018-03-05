@@ -35,13 +35,10 @@ namespace corvusoft
             
             struct RequestImpl
             {
-                static std::string make_string( const core::Bytes& data, const std::function< std::string ( const std::string& ) >& transform = nullptr )
-                {
-                    const std::string value( data.begin( ), data.end( ) );
-                    return ( transform == nullptr ) ? value : transform( value );
-                }
+            
             };
             
+            //move to core library for test visibility
             template< typename Type >
             Type filter_fields_by_tag( const std::string& tag, const std::multimap< std::string, core::Bytes >& fields )
             {

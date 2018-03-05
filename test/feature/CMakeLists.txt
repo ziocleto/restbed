@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.1.0 FATAL_ERROR )
 
-project( "acceptance test suite" VERSION 5.0.0 LANGUAGES CXX )
+project( "feature test suite" VERSION 5.0.0 LANGUAGES CXX )
 
 #
 # Configuration
