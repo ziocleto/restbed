@@ -21,6 +21,7 @@
 //System Namespaces
 using std::bind;
 using std::string;
+using std::size_t;
 using std::function;
 using std::multimap;
 using std::error_code;
@@ -63,50 +64,35 @@ namespace corvusoft
             return true;//m_pimpl->adaptor not_eq nullptr and m_pimpl->adaptor->is_closed( );
         }
         
-        void Session::close( const shared_ptr< Response >& response, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::close( const shared_ptr< Response > response, const function< void ( const shared_ptr< Session >, const error_code ) > completion_handler )
         {
-            yield( response, bind( m_pimpl->success_wrapper, _1, m_pimpl->adaptor, success ), failure );
+            //yield( response, bind( m_pimpl->success_wrapper, _1, m_pimpl->adaptor, success ), failure );
         }
         
-        void Session::close( const string body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::close( const string body, const function< void ( const shared_ptr< Session >, const error_code ) > completion_handler )
         {
-            close( make_bytes( body ), success, failure );
+            //close( make_bytes( body ), success, failure );
         }
         
-        void Session::close( const core::Bytes body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::close( const core::Bytes body, const function< void ( const shared_ptr< Session >, const error_code ) > completion_handler )
         {
-            assert( m_pimpl->adaptor not_eq nullptr );
-            assert( m_pimpl->protocol not_eq nullptr );
+            // assert( m_pimpl->adaptor not_eq nullptr );
+            // assert( m_pimpl->protocol not_eq nullptr );
             
-            error_code error;
-            m_pimpl->adaptor->produce( body, error );
+            // error_code error;
+            // m_pimpl->adaptor->produce( body, error );
             
-            if ( not error and success not_eq nullptr )
-            {
-                success( shared_from_this( ) );
-            }
-            else if ( failure not_eq nullptr )
-            {
-                failure( shared_from_this( ), error );
-            }
+            // if ( not error and success not_eq nullptr )
+            // {
+            //     success( shared_from_this( ) );
+            // }
+            // else if ( failure not_eq nullptr )
+            // {
+            //     failure( shared_from_this( ), error );
+            // }
         }
         
-        void Session::close( const int status, const multimap< const string, const string >& headers, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            close( make_shared< Response >( status, headers ), success, failure );
-        }
-        
-        void Session::close( const int status, const multimap< const string, const string >& headers, const string body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            close( make_shared< Response >( status, headers, body ), success, failure );
-        }
-        
-        void Session::close( const int status, const multimap< const string, const string >& headers, const core::Bytes body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            close( make_shared< Response >( status, headers, body ), success, failure );
-        }
-        
-        void Session::yield( const shared_ptr< Response >& response, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::yield( const shared_ptr< Response > response, const function< void ( const shared_ptr< Session >, const error_code ) > completion_handler )
         {
             // assert( m_pimpl->adaptor not_eq nullptr );
             // assert( m_pimpl->protocol not_eq nullptr );
@@ -143,73 +129,43 @@ namespace corvusoft
             // }
         }
         
-        void Session::yield( const string body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::yield( const string body, const function< void ( const shared_ptr< Session >, const error_code ) > completion_handler )
         {
-            yield( make_bytes( body ), success, failure );
+            //yield( make_bytes( body ), success, failure );
         }
         
-        void Session::yield( const core::Bytes body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::yield( const core::Bytes body, const function< void ( const shared_ptr< Session >, const error_code ) > completion_handler )
         {
-            assert( m_pimpl->adaptor not_eq nullptr );
-            assert( m_pimpl->protocol not_eq nullptr );
+            // assert( m_pimpl->adaptor not_eq nullptr );
+            // assert( m_pimpl->protocol not_eq nullptr );
             
-            error_code error;
-            m_pimpl->adaptor->produce( body, error );
+            // error_code error;
+            // m_pimpl->adaptor->produce( body, error );
             
-            if ( not error and success not_eq nullptr )
-            {
-                success( shared_from_this( ) );
-            }
-            else if ( failure not_eq nullptr )
-            {
-                failure( shared_from_this( ), error );
-            }
+            // if ( not error and success not_eq nullptr )
+            // {
+            //     success( shared_from_this( ) );
+            // }
+            // else if ( failure not_eq nullptr )
+            // {
+            //     failure( shared_from_this( ), error );
+            // }
         }
         
-        void Session::yield( const int status, const multimap< const string, const string >& headers, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            yield( make_shared< Response >( status, headers ), success, failure );
-        }
-        
-        void Session::yield( const int status, const multimap< const string, const string >& headers, const string body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            yield( make_shared< Response >( status, headers, body ), success, failure );
-        }
-        
-        void Session::yield( const int status, const multimap< const string, const string >& headers, const core::Bytes body, const function< void ( const shared_ptr< Session > ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            yield( make_shared< Response >( status, headers, body ), success, failure );
-        }
-        
-        void Session::fetch( const size_t length, const function< void ( const shared_ptr< Session >, const Bytes ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::fetch( const size_t length, const function< void ( const shared_ptr< Session >, const Bytes, const error_code ) > completion_handler )
         {
         
         }
         
-        void Session::fetch( const string& delimiter, const function< void ( const shared_ptr< Session >, const Bytes ) > success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::fetch( const string delimiter, const function< void ( const shared_ptr< Session >, const Bytes, const error_code ) > completion_handler )
         {
         
         }
         
-        void Session::upgrade( const shared_ptr< Response >& response, const function< void ( const shared_ptr< WebSocket > ) >& success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
+        void Session::upgrade( const shared_ptr< Response > response, const function< void ( const shared_ptr< Session >, const shared_ptr< WebSocket >, const error_code ) > completion_handler )
         {
             //build webadaptor.
             //yield response
-        }
-        
-        void Session::upgrade( const int status, const multimap< const string, const string >& headers, const function< void ( const shared_ptr< WebSocket > ) >& success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            upgrade( make_shared< Response >( status, headers ), success, failure );
-        }
-        
-        void Session::upgrade( const int status, const multimap< const string, const string >& headers, const string body, const function< void ( const shared_ptr< WebSocket > ) >& success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            upgrade( make_shared< Response >( status, headers, body ), success, failure );
-        }
-        
-        void Session::upgrade( const int status, const multimap< const string, const string >& headers, const core::Bytes body, const function< void ( const shared_ptr< WebSocket > ) >& success, const function< void ( const shared_ptr< Session >, const error_code ) > failure )
-        {
-            upgrade( make_shared< Response >( status, headers, body ), success, failure );
         }
         
         const string Session::get_origin( void ) const

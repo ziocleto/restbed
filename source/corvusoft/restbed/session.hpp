@@ -71,92 +71,32 @@ namespace corvusoft
                 
                 bool is_closed( void ) const;
                 
-                void close( const std::shared_ptr< Response >& response = nullptr,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success = nullptr,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                void close( const std::shared_ptr< Response > response = nullptr,
+                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > completion_handler = nullptr );
                             
                 void close( const std::string body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success = nullptr,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > completion_handler = nullptr );
                             
                 void close( const core::Bytes body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success = nullptr,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > completion_handler = nullptr );
                             
-                void close( const int status,
-                            const std::multimap< const std::string, const std::string >& headers = { },
-                            const std::function< void ( const std::shared_ptr< Session > ) > success = nullptr,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                            
-                void close( const int status,
-                            const std::multimap< const std::string, const std::string >& headers,
-                            const std::string body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success = nullptr,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                            
-                void close( const int status,
-                            const std::multimap< const std::string, const std::string >& headers,
-                            const core::Bytes body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success = nullptr,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                            
-                void yield( const std::shared_ptr< Response >& response,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                void yield( const std::shared_ptr< Response > response,
+                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > completion_handler );
                             
                 void yield( const std::string body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > completion_handler );
                             
                 void yield( const core::Bytes body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                            
-                void yield( const int status,
-                            const std::multimap< const std::string, const std::string >& headers,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                            
-                void yield( const int status,
-                            const std::multimap< const std::string, const std::string >& headers,
-                            const std::string body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                            
-                void yield( const int status,
-                            const std::multimap< const std::string, const std::string >& headers,
-                            const core::Bytes body,
-                            const std::function< void ( const std::shared_ptr< Session > ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > completion_handler );
                             
                 void fetch( const std::size_t length,
-                            const std::function< void ( const std::shared_ptr< Session >, const core::Bytes ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                            const std::function< void ( const std::shared_ptr< Session >, const core::Bytes, const std::error_code ) > completion_handler );
                             
-                void fetch( const std::string& delimiter,
-                            const std::function< void ( const std::shared_ptr< Session >, const core::Bytes ) > success,
-                            const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                void fetch( const std::string delimiter,
+                            const std::function< void ( const std::shared_ptr< Session >, const core::Bytes, const std::error_code ) > completion_handler );
                             
-                void upgrade( const std::shared_ptr< Response >& response, //ref dangerous
-                              const std::function< void ( const std::shared_ptr< WebSocket > ) >& success,
-                              const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                              
-                void upgrade( const int status,
-                              const std::multimap< const std::string, const std::string >& headers,
-                              const std::function< void ( const std::shared_ptr< WebSocket > ) >& success,
-                              const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                              
-                void upgrade( const int status,
-                              const std::multimap< const std::string, const std::string >& headers,
-                              const std::string body,
-                              const std::function< void ( const std::shared_ptr< WebSocket > ) >& success,
-                              const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
-                              
-                void upgrade( const int status,
-                              const std::multimap< const std::string, const std::string >& headers,
-                              const core::Bytes body,
-                              const std::function< void ( const std::shared_ptr< WebSocket > ) >& success,
-                              const std::function< void ( const std::shared_ptr< Session >, const std::error_code ) > failure = nullptr );
+                void upgrade( const std::shared_ptr< Response > response, //& ref dangerous
+                              const std::function< void ( const std::shared_ptr< Session >, const std::shared_ptr< WebSocket >, const std::error_code ) > completion_handler );
                               
                 //Getters
                 const std::string get_origin( void ) const;
@@ -213,9 +153,8 @@ namespace corvusoft
                 
                 Session( const Session& original ) = delete;
                 
-                Session( const std::shared_ptr< network::Adaptor >& socket,
-                         const std::shared_ptr< protocol::Protocol >& protocol  );
-                         
+                Session( const std::shared_ptr< network::Adaptor >& socket, const std::shared_ptr< protocol::Protocol >& protocol );
+                
                 //Functionality
                 
                 //Getters
