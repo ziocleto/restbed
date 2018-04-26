@@ -2,8 +2,7 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _CORVUSOFT_RESTBED_DETAIL_WEB_SOCKET_MESSAGE_IMPL_H
-#define _CORVUSOFT_RESTBED_DETAIL_WEB_SOCKET_MESSAGE_IMPL_H 1
+#pragma once
 
 //System Includes
 #include <memory>
@@ -39,5 +38,3 @@ namespace corvusoft
         }
     }
 }
-
-#endif  /* _CORVUSOFT_RESTBED_DETAIL_WEB_SOCKET_MESSAGE_IMPL_H */

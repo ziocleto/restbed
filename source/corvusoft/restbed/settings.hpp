@@ -2,8 +2,7 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _CORVUSOFT_RESTBED_SETTINGS_H
-#define _CORVUSOFT_RESTBED_SETTINGS_H 1
+#pragma once
 
 //System Includes
 #include <chrono>
@@ -105,5 +104,3 @@ namespace corvusoft
         };
     }
 }
-
-#endif  /* _CORVUSOFT_RESTBED_SETTINGS_H */

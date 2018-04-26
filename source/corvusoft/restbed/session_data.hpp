@@ -2,8 +2,7 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _CORVUSOFT_RESTBED_SESSION_DATA_H
-#define _CORVUSOFT_RESTBED_SESSION_DATA_H 1
+#pragma once
 
 //System Includes
 
@@ -29,5 +28,3 @@ namespace corvusoft
         using SessionData = core::Settings;
     }
 }
-
-#endif  /* _CORVUSOFT_RESTBED_SESSION_DATA_H */

@@ -2,8 +2,7 @@
  * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
-#ifndef _CORVUSOFT_RESTBED_WEB_SOCKET_H
-#define _CORVUSOFT_RESTBED_WEB_SOCKET_H 1
+#pragma once
 
 //System Includes
 #include <memory>
@@ -37,7 +36,7 @@ namespace corvusoft
         class WebSocketMessage;
         enum OperationCode : std::uint8_t;
         
-            namespace detail
+        namespace detail
         {
             struct WebSocketImpl;
         }
@@ -137,5 +136,3 @@ namespace corvusoft
         };
     }
 }
-
-#endif  /* _CORVUSOFT_RESTBED_WEB_SOCKET_H */
