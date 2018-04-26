@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -54,7 +54,7 @@ TEST_CASE( "content type present on empty response body", "[response]" )
             auto response = Http::sync( request );
             
             REQUIRE( 200 == response->get_status_code( ) );
-
+            
             auto headers = response->get_headers( );
             REQUIRE( headers.end( ) == headers.find( "Content-Type" ) );
             

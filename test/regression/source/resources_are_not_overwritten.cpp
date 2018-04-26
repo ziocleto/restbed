@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -64,7 +64,7 @@ TEST_CASE( "overwrite existing resource", "[resource]" )
             request->set_port( 1984 );
             request->set_host( "localhost" );
             request->set_path( "/TestResource" );
-
+            
             auto response = Http::sync( request );
             
             REQUIRE( 401 == response->get_status_code( ) );
@@ -102,7 +102,7 @@ TEST_CASE( "add alternative resource", "[resource]" )
             request->set_port( 1984 );
             request->set_host( "localhost" );
             request->set_path( "/TestResource" );
-
+            
             multimap< string, string > headers;
             headers.insert( make_pair( "Content-Type", "application/xml" ) );
             request->set_headers( headers );

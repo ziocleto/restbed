@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -75,14 +75,14 @@ TEST_CASE( "large request bodies being trimmed", "[request]" )
             request->set_method( "POST" );
             request->set_host( "localhost" );
             request->set_path( "/test" );
-
+            
             Bytes data( body, body + 492 );
             request->set_body( data );
-
+            
             multimap< string, string > headers;
             headers.insert( make_pair( "Content-Length", ::to_string( data.size( ) ) ) );
             request->set_headers( headers );
-
+            
             auto response = Http::sync( request );
             
             REQUIRE( 201 == response->get_status_code( ) );

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -49,7 +49,7 @@ TEST_CASE( "mismatched resource path", "[service]" )
             request->set_port( 1984 );
             request->set_host( "localhost" );
             request->set_path( "/" );
-
+            
             auto response = Http::sync( request );
             
             REQUIRE( 404 == response->get_status_code( ) );
@@ -82,7 +82,7 @@ TEST_CASE( "matched resource path", "[service]" )
             request->set_port( 1984 );
             request->set_host( "localhost" );
             request->set_path( "/test" );
-
+            
             auto response = Http::sync( request );
             
             REQUIRE( 200 == response->get_status_code( ) );

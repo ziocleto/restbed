@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -63,9 +63,9 @@ TEST_CASE( "request get parameters fails to return data", "[request]" )
             request->set_port( 1984 );
             request->set_host( "localhost" );
             request->set_path( "/resources/123/messages/abc?style=true&name=test%20item" );
-
+            
             auto response = Http::sync( request );
-
+            
             REQUIRE( 200 == response->get_status_code( ) );
             
             service.stop( );

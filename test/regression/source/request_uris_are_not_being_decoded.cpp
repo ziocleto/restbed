@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -49,12 +49,12 @@ TEST_CASE( "encoded uri test", "[request]" )
     service.set_ready_handler( [ &worker ]( Service & service )
     {
         worker = make_shared< thread >( [ &service ] ( )
-        {            
+        {
             auto request = make_shared< Request >( );
             request->set_port( 8989 );
             request->set_host( "localhost" );
             request->set_path( "/uri%20test?ben+crowhurst=%4030" );
-
+            
             auto response = Http::sync( request );
             
             REQUIRE( 200 == response->get_status_code( ) );

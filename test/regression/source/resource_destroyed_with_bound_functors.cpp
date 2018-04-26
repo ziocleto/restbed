@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -44,7 +44,7 @@ TEST_CASE( "resource instance destroyed with bound method functors", "[resource]
             request->set_port( 1984 );
             request->set_host( "localhost" );
             request->set_path( "/" );
-
+            
             auto response = Http::sync( request );
             
             REQUIRE( 501 == response->get_status_code( ) );

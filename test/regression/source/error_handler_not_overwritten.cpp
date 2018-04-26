@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -53,7 +53,7 @@ TEST_CASE( "overwrite existing resource", "[resource]" )
     service.set_ready_handler( [ &worker ]( Service & service )
     {
         worker = make_shared< thread >( [ &service ] ( )
-        {            
+        {
             auto request = make_shared< Request >( );
             request->set_port( 1984 );
             request->set_host( "localhost" );

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -27,7 +27,7 @@ using namespace restbed;
 void get_method_handler( const shared_ptr< Session > session )
 {
     const auto request = session->get_request( );
-
+    
     if ( "5e6f19040a4c" == request->get_path_parameter( "my-key" ) )
     {
         session->close( 200 );

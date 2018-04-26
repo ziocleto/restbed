@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -72,7 +72,7 @@ TEST_CASE( "fails to parse identical query parameters", "[service]" )
             request->set_port( 1984 );
             request->set_host( "localhost" );
             request->set_path( "/test?echo=false&echo=true" );
-
+            
             auto response = Http::sync( request );
             
             REQUIRE( 200 == response->get_status_code( ) );
