@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -28,7 +28,8 @@
 #include <asio/streambuf.hpp>
 
 #ifdef BUILD_SSL
-    #include <asio/ssl.hpp>
+#include <asio/ssl.hpp>
+#include <openssl/ssl.h>
 #endif
 
 //System Namespaces
@@ -57,7 +58,7 @@ using asio::ip::tcp;
 using asio::streambuf;
 using asio::io_service;
 #ifdef BUILD_SSL
-    using asio::ssl::stream;
+using asio::ssl::stream;
 #endif
 
 namespace restbed
@@ -67,73 +68,73 @@ namespace restbed
         Bytes HttpImpl::to_bytes( const shared_ptr< Request >& request )
         {
             auto path = request->get_path( );
-            
+
             auto parameters = request->get_query_parameters( );
-            
+
             if ( not parameters.empty( ) )
             {
                 string query = String::empty;
-                
+
                 for ( const auto parameter : parameters )
                 {
                     query += Uri::encode_parameter( parameter.first ) + "=" + Uri::encode_parameter( parameter.second ) + "&";
                 }
-                
+
                 path += "?" + query.substr( 0, query.length( ) - 1 );
             }
-            
+
             auto uri = request->m_pimpl->m_uri;
-            
+
             if ( uri not_eq nullptr and not uri->get_fragment( ).empty( ) )
             {
                 path += "#" + uri->get_fragment( );
             }
-            
+
             auto protocol = request->get_protocol( );
-            
+
             if ( String::uppercase( protocol ) == "HTTPS" )
             {
                 protocol = "HTTP";
             }
-            
+
             char* locale = nullptr;
             if (auto current_locale = setlocale( LC_NUMERIC, nullptr ) )
             {
                 locale = strdup(current_locale);
                 setlocale( LC_NUMERIC, "C" );
             }
-            
+
             auto data = String::format( "%s %s %s/%.1f\r\n",
                                         request->get_method( ).data( ),
                                         path.data( ),
                                         protocol.data( ),
                                         request->get_version( ) );
-            
+
             if (locale) {
                 setlocale( LC_NUMERIC, locale );
                 free( locale );
             }
-            
+
             auto headers = request->get_headers( );
-            
+
             if ( not headers.empty( ) )
             {
                 data += String::join( headers, ": ", "\r\n" ) + "\r\n";
             }
-            
+
             data += "\r\n";
-            
+
             auto bytes = String::to_bytes( data );
             auto body = request->get_body( );
-            
+
             if ( not body.empty( ) )
             {
                 bytes.insert( bytes.end( ), body.begin( ), body.end( ) );
             }
-            
+
             return bytes;
         }
-        
+
         void HttpImpl::socket_setup( const shared_ptr< Request >& request, const shared_ptr< const Settings >& settings )
         {
             if ( request->m_pimpl->m_socket == nullptr )
@@ -142,9 +143,9 @@ namespace restbed
                 {
                     request->m_pimpl->m_io_service = make_shared< asio::io_service >( );
                 }
-                
+
 #ifdef BUILD_SSL
-                
+
                 if ( String::uppercase( request->m_pimpl->m_protocol ) == "HTTPS" )
                 {
                     ssl_socket_setup( request, settings->get_ssl_settings( ) );
@@ -156,46 +157,87 @@ namespace restbed
                     request->m_pimpl->m_socket = make_shared< SocketImpl >( socket );
 #ifdef BUILD_SSL
                 }
-                
+
 #endif
             }
-            
+
             request->m_pimpl->m_socket->set_timeout( settings->get_connection_timeout( ) );
         }
-        
+
 #ifdef BUILD_SSL
         void HttpImpl::ssl_socket_setup( const shared_ptr< Request >& request, const shared_ptr< const SSLSettings >& settings )
         {
             asio::ssl::context context( asio::ssl::context::sslv23 );
             shared_ptr< asio::ssl::stream< asio::ip::tcp::socket > > socket = nullptr;
-            
+
             if ( settings not_eq nullptr )
             {
-                const auto pool = settings->get_certificate_authority_pool( );
-                
-                if ( pool.empty( ) )
+                if ( settings->has_enabled_client_authentication( ) )
                 {
-                    context.set_default_verify_paths( );
+                    auto filename = settings->get_certificate_chain( );
+
+                    if ( not filename.empty( ) )
+                    {
+                        context.use_certificate_chain_file( filename );
+                    }
+
+                    filename = settings->get_certificate( );
+
+                    if ( not filename.empty( ) )
+                    {
+                        context.use_certificate_file( filename, asio::ssl::context::pem );
+                    }
+
+                    filename = settings->get_private_key( );
+
+                    if ( not filename.empty( ) )
+                    {
+                        context.use_private_key_file( filename, asio::ssl::context::pem );
+                    }
+
+                    filename = settings->get_private_rsa_key( );
+
+                    if ( not filename.empty( ) )
+                    {
+                        context.use_rsa_private_key_file( filename, asio::ssl::context::pem );
+                    }
+                }
+
+                if ( settings->has_enabled_server_authentication( ) )
+                {
+                    const auto pool = settings->get_certificate_authority_pool( );
+
+                    if ( pool.empty( ) )
+                    {
+                        context.set_default_verify_paths( );
+                    }
+                    else
+                    {
+                        context.add_verify_path( pool );
+                    }
+                    socket = make_shared< asio::ssl::stream< asio::ip::tcp::socket > >( *request->m_pimpl->m_io_service, context );
+                    socket->set_verify_mode( asio::ssl::verify_peer | asio::ssl::verify_fail_if_no_peer_cert );
                 }
                 else
                 {
-#ifdef _WIN32
-                    context.load_verify_file(settings->get_certificate_authority_pool());
-#else
-                    context.add_verify_path( settings->get_certificate_authority_pool( ) );
-#endif
+                    socket = make_shared< asio::ssl::stream< asio::ip::tcp::socket > >( *request->m_pimpl->m_io_service, context );
+                    socket->set_verify_mode( asio::ssl::verify_none );
                 }
-                
-                socket = make_shared< asio::ssl::stream< asio::ip::tcp::socket > >( *request->m_pimpl->m_io_service, context );
-                socket->set_verify_mode( asio::ssl::verify_peer | asio::ssl::verify_fail_if_no_peer_cert );
             }
             else
             {
                 socket = make_shared< asio::ssl::stream< asio::ip::tcp::socket > >( *request->m_pimpl->m_io_service, context );
                 socket->set_verify_mode( asio::ssl::verify_none );
             }
-            
+#ifdef OPENSSL_IS_BORINGSSL
+            SSL_set_renegotiate_mode( socket->native_handle(), ssl_renegotiate_once ); // In BoringSSL, renegotiation is disabled by default. With this line we enable it for one time to allow client side authentication
+#endif
+            if( ! settings->get_cipher_suites().empty() )
+            {
+                SSL_set_cipher_list( socket->native_handle(), settings->get_cipher_suites().c_str() );
+            }
             socket->set_verify_callback( asio::ssl::rfc2818_verification( request->get_host( ) ) );
+
             request->m_pimpl->m_socket = make_shared< SocketImpl >( socket );
         }
 #endif
@@ -206,10 +248,10 @@ namespace restbed
                 const auto body = String::format( "Failed to locate HTTP endpoint: %s", error.message( ).data( ) );
                 return callback( request, create_error_response( request, body ) );
             }
-            
+
             request->m_pimpl->m_socket->start_write( to_bytes( request ), bind( write_handler, _1, _2, request, callback ) );
         }
-        
+
         void HttpImpl::write_handler( const error_code& error, const size_t, const shared_ptr< Request >& request, const function< void ( const shared_ptr< Request >, const shared_ptr< Response > ) >& callback )
         {
             if ( error )
@@ -217,11 +259,11 @@ namespace restbed
                 const auto body = String::format( "Socket write failed: %s", error.message( ).data( ) );
                 return callback( request, create_error_response( request, body ) );
             }
-            
+
             request->m_pimpl->m_buffer = make_shared< asio::streambuf >( );
             request->m_pimpl->m_socket->start_read( request->m_pimpl->m_buffer, "\r\n", bind( read_status_handler, _1, _2, request, callback ) );
         }
-        
+
         const shared_ptr< Response > HttpImpl::create_error_response( const shared_ptr< Request >& request, const string& message )
         {
             auto response = request->m_pimpl->m_response;
@@ -232,10 +274,10 @@ namespace restbed
             response->set_header( "Content-Type", "text/plain; utf-8" );
             response->set_header( "Content-Length", ::to_string( message.length( ) ) );
             response->set_body( message );
-            
+
             return response;
         }
-        
+
         void HttpImpl::read_status_handler( const error_code& error, const size_t, const shared_ptr< Request >& request, const function< void ( const shared_ptr< Request >, const shared_ptr< Response > ) >& callback )
         {
             if ( error )
@@ -243,63 +285,63 @@ namespace restbed
                 const auto body = String::format( "Failed to read HTTP response status line: %s", error.message( ).data( ) );
                 return callback( request, create_error_response( request, body ) );
             }
-            
+
             istream response_stream( request->m_pimpl->m_buffer.get( ) );
             string status_line = String::empty;
             getline( response_stream, status_line );
-            
+
             smatch matches;
             static const regex status_line_pattern( "^([a-zA-Z]+)\\/(\\d*\\.?\\d*) (-?\\d+) (.*)\\r$" );
-            
+
             if ( not regex_match( status_line, matches, status_line_pattern ) or matches.size( ) not_eq 5 )
             {
                 const auto body = String::format( "HTTP response status line malformed: '%s'", status_line.data( ) );
                 return callback( request, create_error_response( request, body ) );
             }
-            
+
             auto response = request->m_pimpl->m_response;
             response->set_protocol( matches[ 1 ].str( ) );
             response->set_version( stod( matches[ 2 ].str( ) ) );
             response->set_status_code( stoi( matches[ 3 ].str( ) ) );
             response->set_status_message( matches[ 4 ].str( ) );
-            
+
             request->m_pimpl->m_socket->start_read( request->m_pimpl->m_buffer, "\r\n\r\n", bind( read_headers_handler, _1, _2, request, callback ) );
         }
-        
+
         void HttpImpl::read_headers_handler( const error_code& error, const size_t, const shared_ptr< Request >& request, const function< void ( const shared_ptr< Request >, const shared_ptr< Response > ) >& callback )
         {
             if ( error == asio::error::eof )
             {
                 return callback( request, request->m_pimpl->m_response );
             }
-            
+
             if ( error )
             {
                 const auto body = String::format( "Failed to read HTTP response status headers: '%s'", error.message( ).data( ) );
                 return callback( request, create_error_response( request, body ) );
             }
-            
+
             string header = String::empty;
             multimap< string, string > headers = { };
             istream response_stream( request->m_pimpl->m_buffer.get( ) );
-            
+
             while ( getline( response_stream, header ) and header not_eq "\r" )
             {
                 static const regex header_pattern( "^([^:.]*): *(.*)\\s*$" );
                 smatch matches;
-                
+
                 if ( not regex_match( header, matches, header_pattern ) or matches.size( ) not_eq 3 )
                 {
                     const auto body = String::format( "Malformed HTTP response header: '%s'", header.data( ) );
                     return callback( request, create_error_response( request, body ) );
                 }
-                
+
                 headers.insert( make_pair( matches[ 1 ], matches[ 2 ] ) );
             }
-            
+
             auto response = request->m_pimpl->m_response;
             response->set_headers( headers );
-            
+
             callback( request, response );
         }
     }

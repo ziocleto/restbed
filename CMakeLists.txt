@@ -39,6 +39,8 @@ if ( APPLE )
     set( CMAKE_MACOSX_RPATH ON )
 endif ( )
 
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_NO_STDIO" )
+
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake" )
 
 find_package( asio REQUIRED )
